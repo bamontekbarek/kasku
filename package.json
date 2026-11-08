@@ -2,7 +2,7 @@
   "name": "kasku",
   "version": "1.0.0",
   "private": true,
-  "description": "Kasku — catat pengeluaran lebih cepat, cukup foto struknya.",
+  "description": "Kasku \u2014 catat pengeluaran lebih cepat, cukup foto struknya.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -37,6 +37,8 @@
     "vitest": "^5.1.0"
   },
   "engines": {
-    "node": ">=20"
-  }
+    "node": ">=22.12",
+    "npm": ">=11"
+  },
+  "packageManager": "npm@11.20.0"
 }

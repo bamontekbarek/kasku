@@ -15,8 +15,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: npm
+      # Lockfile dibuat dengan npm 11; npm 10 gagal di `npm ci` (Missing … from lock file).
+      - run: npm install --global npm@11.20.0
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
