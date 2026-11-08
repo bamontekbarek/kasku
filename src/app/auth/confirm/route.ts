@@ -16,14 +16,17 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const rawType = searchParams.get("type");
   const type = OTP_TYPES.includes(rawType as EmailOtpType) ? (rawType as EmailOtpType) : null;
-  const next = safeNextPath(searchParams.get("next"), type === "recovery" ? "/reset-password" : "/dashboard");
+  // token_hash links carry type=recovery; PKCE links (default Supabase email) carry flow=recovery from redirectTo.
+  const isRecovery = type === "recovery" || searchParams.get("flow") === "recovery";
+  const next = safeNextPath(searchParams.get("next"), isRecovery ? "/reset-password" : "/dashboard");
 
   const supabase = await createClient();
   let ok = false;
   if (tokenHash && type) {
     ok = !(await supabase.auth.verifyOtp({ type, token_hash: tokenHash })).error;
   } else if (code) {
-    // PKCE fallback when the default Supabase template ({{ .ConfirmationURL }}) is still in use.
+    // PKCE: default Supabase email ({{ .ConfirmationURL }}) → /auth/v1/verify → here with ?code=.
+    // Works only in the browser that started the flow (code verifier cookie).
     ok = !(await supabase.auth.exchangeCodeForSession(code)).error;
   }
 
@@ -34,7 +37,7 @@ export async function GET(request: NextRequest) {
     const [path, query] = next.split("?");
     target.pathname = path;
     if (query) target.search = `?${query}`;
-  } else if (type === "recovery" || next.startsWith("/reset-password")) {
+  } else if (isRecovery) {
     target.pathname = "/reset-password";
     target.searchParams.set("expired", "1");
   } else {
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
     target.searchParams.set("verify", "failed");
   }
   const response = NextResponse.redirect(target);
-  if (ok && type === "recovery") {
+  if (ok && isRecovery) {
     response.cookies.set(RECOVERY_COOKIE, "1", {
       httpOnly: true,
       secure: request.nextUrl.protocol === "https:",

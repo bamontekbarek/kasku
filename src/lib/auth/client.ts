@@ -11,9 +11,15 @@ export async function getSupabase() {
   return createClient();
 }
 
-/** Origin used in email links ({{ .RedirectTo }} in supabase/templates). */
-export function appOrigin(): string {
-  return window.location.origin;
+/**
+ * Where links in auth emails land: /auth/confirm on the current origin (localhost, preview, production).
+ * Supabase must allow it in additional_redirect_urls. `recovery` marks the password-reset flow.
+ */
+export function emailRedirect(flow: "signup" | "recovery"): string {
+  const url = new URL("/auth/confirm", window.location.origin);
+  url.searchParams.set("next", flow === "recovery" ? "/reset-password" : "/dashboard");
+  if (flow === "recovery") url.searchParams.set("flow", "recovery");
+  return url.toString();
 }
 
 export type AuthFailure = "invalidCredentials" | "unverified" | "rateLimited" | "generic";
@@ -33,13 +39,13 @@ export async function resendVerification(email: string): Promise<boolean> {
   const { error } = await (await getSupabase()).auth.resend({
     type: "signup",
     email,
-    options: { emailRedirectTo: appOrigin() },
+    options: { emailRedirectTo: emailRedirect("signup") },
   });
   return !error;
 }
 
 /** AUTH-05: always resolves "sent" for unknown emails; only network/rate-limit errors return false. */
 export async function sendPasswordReset(email: string): Promise<boolean> {
-  const { error } = await (await getSupabase()).auth.resetPasswordForEmail(email, { redirectTo: appOrigin() });
+  const { error } = await (await getSupabase()).auth.resetPasswordForEmail(email, { redirectTo: emailRedirect("recovery") });
   return !error;
 }

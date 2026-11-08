@@ -10,7 +10,7 @@ import { FieldError, FormAlert, PasswordField, TextField } from "@/components/fo
 import { Icon } from "@/components/Icon";
 import { LangToggle } from "@/components/LangToggle";
 import { Button, IconLink } from "@/components/ui";
-import { appOrigin, classifyAuthError, getSupabase } from "@/lib/auth/client";
+import { classifyAuthError, emailRedirect, getSupabase } from "@/lib/auth/client";
 import { cx } from "@/lib/format";
 import { checkPassword, passwordScore, registerSchema, type RegisterInput } from "@/lib/validation/auth";
 import { AuthScreen } from "../AuthScreen";
@@ -47,7 +47,7 @@ export function RegisterForm() {
     const { error } = await (await getSupabase()).auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName, locale }, emailRedirectTo: appOrigin() },
+      options: { data: { full_name: fullName, locale }, emailRedirectTo: emailRedirect("signup") },
     });
     // With email confirmation on, an already-registered email gets the same success response
     // as a new one (no account enumeration), so any error here is a real failure.

@@ -29,8 +29,16 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 
 3. `npm install && npm run dev` → http://localhost:3000
 
+Project dev: **kasku_dev** (`tqsijrdyczabruautqmi`). Login CLI di sini harus pakai token
+(`npx supabase login --token sbp_…`) atau dari Terminal biasa.
+
 `supabase config push` menimpa pengaturan Auth di project. Sesudah ada domain production, ganti
 `site_url` dan `additional_redirect_urls` di `supabase/config.toml` lalu push lagi.
+
+**Email:** free tier dengan email bawaan Supabase tidak bisa memakai template sendiri dan dibatasi ±2 email/jam.
+Link di email bawaan memakai PKCE (`?code=`), jadi hanya berhasil di browser yang sama tempat user
+mendaftar/meminta reset. Setelah SMTP sendiri (misalnya Resend) dipasang, aktifkan blok template di
+`config.toml` agar link memakai `token_hash` dan bisa dibuka di perangkat mana pun.
 
 ## Perintah
 
@@ -72,7 +80,7 @@ supabase/
 
 - Tampilan dipaksa mobile: satu kolom `max-width: 430px` di tengah layar.
 - Bahasa tidak ada di URL. Pilihan bahasa disimpan di cookie dan `profiles.locale`, dan ikut terbawa saat login di perangkat lain.
-- Link di email memakai `token_hash` + `{{ .RedirectTo }}`, jadi bisa dibuka di browser mana pun dan ikut domain preview atau localhost.
+- Link di email selalu mendarat di `/auth/confirm` pada origin yang dipakai (localhost, preview, production).
 - `supabase-js` baru dimuat saat tombol auth ditekan, supaya JS awal layar auth ±163 KB (target < 200 KB).
 
 ## State pratinjau mockup

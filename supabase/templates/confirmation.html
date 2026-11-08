@@ -10,7 +10,7 @@
             Halo! Klik tombol di bawah untuk memverifikasi email <strong style="color:#eaecef">{{ .Email }}</strong> dan mulai memakai Kasku.
           </p>
           <p style="margin:0 0 24px">
-            <a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=email&next=/dashboard"
+            <a href="{{ .RedirectTo }}&token_hash={{ .TokenHash }}&type=email"
                style="display:inline-block;padding:14px 22px;background:#fcd535;color:#181a20;border-radius:10px;font-weight:600;text-decoration:none">
               Verifikasi email
             </a>
