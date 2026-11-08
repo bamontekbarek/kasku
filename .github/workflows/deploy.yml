@@ -1,17 +1,14 @@
-name: Deploy dev
+name: Deploy production
 
 # PRD 5.2: cek kode → migrasi Supabase → build dan deploy Vercel, berurutan.
-# Tahap sekarang semuanya "dev":
-#   branch dev → GitHub Environment "development" → Supabase kasku_dev → Vercel (Production Branch = dev)
-# Saat production sungguhan disiapkan: tambah trigger main + Environment "production",
-# dan kembalikan Production Branch Vercel ke main.
+#   branch main → GitHub Environment "production" → Supabase "kasku" → Vercel Production
 on:
   push:
-    branches: [dev]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-dev
+  group: production-deploy
   cancel-in-progress: false
 
 jobs:
@@ -33,7 +30,7 @@ jobs:
     name: Migrasi Supabase
     needs: check
     runs-on: ubuntu-latest
-    environment: development
+    environment: production
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -58,7 +55,7 @@ jobs:
     needs: migrate
     runs-on: ubuntu-latest
     environment:
-      name: development
+      name: production
       url: ${{ steps.deploy.outputs.url }}
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
@@ -71,7 +68,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm install --global vercel@latest
-      # Production Branch di Vercel = dev, jadi env var dev diisi di environment Production Vercel.
       - run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
       - run: vercel build --prod --token="$VERCEL_TOKEN"
       - name: Deploy

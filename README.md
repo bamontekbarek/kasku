@@ -29,7 +29,7 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 
 3. `npm install && npm run dev` → http://localhost:3000
 
-Project dev: **kasku_dev** (`tqsijrdyczabruautqmi`). Login CLI di sini harus pakai token
+Project Supabase: **kasku** (`tqsijrdyczabruautqmi`). Login CLI di sini harus pakai token
 (`npx supabase login --token sbp_…`) atau dari Terminal biasa.
 
 `supabase config push` menimpa pengaturan Auth di project. Sesudah ada domain production, ganti
@@ -73,7 +73,7 @@ supabase/
   config.toml          pengaturan Auth (verifikasi wajib, aturan kata sandi, template email)
   migrations/          skema database
   templates/           email verifikasi + reset (bahasa Indonesia)
-.github/workflows/     ci.yml (PR), deploy.yml (dev → migrasi kasku_dev → Vercel, Production Branch = dev)
+.github/workflows/     ci.yml (PR), deploy.yml (main → migrasi Supabase → Vercel Production)
 ```
 
 ## Catatan desain
