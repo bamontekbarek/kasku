@@ -32,7 +32,7 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 Project Supabase: **kasku** (`tqsijrdyczabruautqmi`). Login CLI di sini harus pakai token
 (`npx supabase login --token sbp_…`) atau dari Terminal biasa.
 
-`supabase config push` menimpa pengaturan Auth di project. Sesudah ada domain production, ganti
+`supabase config push` menimpa pengaturan Auth di project. Production: https://kasku-eosin.vercel.app. Jika domain berubah, ganti
 `site_url` dan `additional_redirect_urls` di `supabase/config.toml` lalu push lagi.
 
 **Email:** free tier dengan email bawaan Supabase tidak bisa memakai template sendiri dan dibatasi ±2 email/jam.
