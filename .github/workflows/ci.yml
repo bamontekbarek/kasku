@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+
+  migrations:
+    name: Migrasi Supabase berjalan dari nol
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      # Starts only Postgres and applies every migration in supabase/migrations (like `supabase db reset`).
+      - run: supabase db start
+      - name: Uji trigger user baru
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users (id, email, raw_user_meta_data)
+            values ('00000000-0000-0000-0000-000000000001', 'ci@kasku.test', '{"full_name":"CI User","locale":"en"}');
+          do $$
+          begin
+            assert (select count(*) from public.categories where user_id = '00000000-0000-0000-0000-000000000001') = 7, 'harus 7 kategori bawaan';
+            assert (select locale from public.profiles where id = '00000000-0000-0000-0000-000000000001') = 'en', 'locale profil';
+            assert exists (select 1 from public.notification_settings where user_id = '00000000-0000-0000-0000-000000000001'), 'notification_settings';
+            assert (select is_system from public.categories where user_id = '00000000-0000-0000-0000-000000000001' and name = 'Lainnya'), 'Lainnya = sistem';
+          end $$;
+          SQL

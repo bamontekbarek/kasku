@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="id">
+  <body style="margin:0;padding:24px;background:#0b0e11;font-family:'IBM Plex Sans',Arial,sans-serif;color:#eaecef">
+    <table role="presentation" width="100%" style="max-width:480px;margin:0 auto;background:#1e2329;border-radius:14px">
+      <tr>
+        <td style="padding:28px">
+          <p style="margin:0 0 16px;font-size:20px;font-weight:700;color:#fcd535">Kasku</p>
+          <h1 style="margin:0 0 12px;font-size:22px">Reset kata sandi</h1>
+          <p style="margin:0 0 20px;font-size:15px;line-height:22px;color:#b7bdc6">
+            Kami menerima permintaan untuk membuat kata sandi baru bagi akun <strong style="color:#eaecef">{{ .Email }}</strong>.
+            Link ini berlaku <strong style="color:#eaecef">1 jam</strong> dan hanya bisa dipakai sekali.
+          </p>
+          <p style="margin:0 0 24px">
+            <a href="{{ .RedirectTo }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/reset-password"
+               style="display:inline-block;padding:14px 22px;background:#fcd535;color:#181a20;border-radius:10px;font-weight:600;text-decoration:none">
+              Buat kata sandi baru
+            </a>
+          </p>
+          <p style="margin:0;font-size:13px;line-height:19px;color:#848e9c">
+            Jika kamu tidak meminta reset, abaikan email ini. Kata sandimu tidak berubah.<br />
+            <span lang="en">Tap the button above to create a new Kasku password. The link is valid for 1 hour.</span>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
