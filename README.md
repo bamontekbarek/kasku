@@ -73,7 +73,7 @@ supabase/
   config.toml          pengaturan Auth (verifikasi wajib, aturan kata sandi, template email)
   migrations/          skema database
   templates/           email verifikasi + reset (bahasa Indonesia)
-.github/workflows/     ci.yml (PR + dev), deploy.yml (main → migrasi → Vercel)
+.github/workflows/     ci.yml (PR), deploy.yml (dev → migrasi kasku_dev → Vercel, Production Branch = dev)
 ```
 
 ## Catatan desain
