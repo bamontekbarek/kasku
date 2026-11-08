@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { TabScreen } from "@/components/BottomNav";
 import { Icon } from "@/components/Icon";
 import { Avatar, ButtonLink, Dot, ProgressBar, ScanBadge } from "@/components/ui";
-import { budget, periodStats, recentTransactions, topCategories, user, type Period } from "@/lib/data";
+import { budget, periodStats, recentTransactions, topCategories, type Period } from "@/lib/data";
 import { cx, rp, short } from "@/lib/format";
 
 const periods: Period[] = ["harian", "mingguan", "bulanan", "tahunan"];
@@ -17,7 +17,7 @@ function greeting(hour: number) {
   return "Selamat malam";
 }
 
-export function Dashboard({ offline }: { offline: boolean }) {
+export function Dashboard({ offline, user }: { offline: boolean; user: { name: string; initials: string } }) {
   const [period, setPeriod] = useState<Period>("bulanan");
   const [hidden, setHidden] = useState(false);
   const [hello, setHello] = useState("Selamat malam");

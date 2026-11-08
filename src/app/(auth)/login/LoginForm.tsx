@@ -1,34 +1,73 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Icon } from "@/components/Icon";
+import { useForm } from "react-hook-form";
+import { syncLocaleFromProfile } from "@/app/actions/locale";
+import { FormAlert, PasswordField, TextField } from "@/components/form";
 import { LangToggle } from "@/components/LangToggle";
-import { Button, Logo, labelClass } from "@/components/ui";
-import { useT } from "@/lib/i18n";
+import { Button, Logo } from "@/components/ui";
+import { classifyAuthError, type AuthFailure, getSupabase } from "@/lib/auth/client";
+import { loginSchema, type LoginInput } from "@/lib/validation/auth";
 import { AuthScreen } from "../AuthScreen";
 
-const S = {
-  id: { title: "Masuk ke akun", sub: "Catat pengeluaran lebih cepat — cukup foto struknya.", email: "Email", pw: "Kata sandi", forgot: "Lupa kata sandi?", cta: "Masuk", noacc: "Belum punya akun?", reg: "Daftar", error: "Email atau kata sandi salah. Periksa lagi, atau pakai Lupa kata sandi.", show: "Tampilkan kata sandi", hide: "Sembunyikan kata sandi" },
-  en: { title: "Log in to your account", sub: "Track spending faster — just snap the receipt.", email: "Email", pw: "Password", forgot: "Forgot password?", cta: "Log in", noacc: "Don't have an account?", reg: "Sign up", error: "Incorrect email or password. Check again, or use Forgot password.", show: "Show password", hide: "Hide password" },
-};
+export type LoginNotice = "verifyFailed" | "passwordChanged" | "invalidCredentials";
 
-const boxClass =
-  "box-border flex h-[52px] items-center gap-2.5 rounded-[10px] border border-raised bg-surface focus-within:border-accent";
-
-export function LoginForm({ initialError }: { initialError: boolean }) {
-  const t = useT(S);
+export function LoginForm({ next, notice }: { next: string; notice: LoginNotice | null }) {
+  const t = useTranslations("login");
+  const tc = useTranslations("common");
   const router = useRouter();
-  const [show, setShow] = useState(false);
+  const [failure, setFailure] = useState<AuthFailure | null>(notice === "invalidCredentials" ? "invalidCredentials" : null);
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginInput>({ resolver: zodResolver(loginSchema), defaultValues: { email: "", password: "" } });
+
+  const onSubmit = handleSubmit(async ({ email, password }) => {
+    setFailure(null);
+    const { error } = await (await getSupabase()).auth.signInWithPassword({ email, password });
+    const kind = classifyAuthError(error);
+    if (kind) {
+      setFailure(kind);
+      return;
+    }
+    await syncLocaleFromProfile();
+    router.replace(next);
+    router.refresh();
+  });
+
+  const alert =
+    failure === "invalidCredentials" ? (
+      <FormAlert>{t("error")}</FormAlert>
+    ) : failure === "unverified" ? (
+      <FormAlert>
+        {t("unverified")}{" "}
+        <Link href={`/verify-email?email=${encodeURIComponent(getValues("email"))}`} className="font-semibold no-underline">
+          {t("unverifiedCta")}
+        </Link>
+      </FormAlert>
+    ) : failure === "rateLimited" ? (
+      <FormAlert>{tc("tooManyRequests")}</FormAlert>
+    ) : failure === "generic" ? (
+      <FormAlert>{tc("genericError")}</FormAlert>
+    ) : notice === "verifyFailed" ? (
+      <FormAlert>{t("verifyFailed")}</FormAlert>
+    ) : notice === "passwordChanged" ? (
+      <FormAlert tone="success">{t("passwordChanged")}</FormAlert>
+    ) : null;
 
   return (
     <AuthScreen
       footer={
         <p className="m-0 text-center text-sm text-muted">
-          {t.noacc}{" "}
-          <Link href="/register" className="font-semibold no-underline">
-            {t.reg}
+          {t("noAccount")}{" "}
+          <Link href="/register" className="inline-block py-3 font-semibold no-underline">
+            {t("register")}
           </Link>
         </p>
       }
@@ -39,58 +78,39 @@ export function LoginForm({ initialError }: { initialError: boolean }) {
       </div>
 
       <div className="mt-14">
-        <h1 className="m-0 text-[30px] leading-[38px] font-bold tracking-[-0.4px]">{t.title}</h1>
-        <p className="mt-2.5 mb-0 text-[15px] leading-[22px] text-muted">{t.sub}</p>
+        <h1 className="m-0 text-[30px] leading-[38px] font-bold tracking-[-0.4px]">{t("title")}</h1>
+        <p className="mt-2.5 mb-0 text-[15px] leading-[22px] text-muted">{t("sub")}</p>
       </div>
 
-      {initialError && (
-        <div role="alert" className="mt-6 flex items-start gap-2.5 rounded-[10px] border border-danger-line bg-danger-soft px-3.5 py-3 text-sm leading-5">
-          <Icon name="alertCircle" size={18} strokeWidth={2} className="mt-px flex-none text-danger" />
-          <span>{t.error}</span>
-        </div>
-      )}
+      {alert && <div className="mt-6">{alert}</div>}
 
-      <form
-        className="mt-9 flex flex-col gap-5"
-        onSubmit={(e) => {
-          e.preventDefault();
-          // TODO: supabase.auth.signInWithPassword
-          router.push("/dashboard");
-        }}
-      >
-        <div className="flex flex-col gap-2">
-          <label htmlFor="login-email" className={labelClass}>
-            {t.email}
-          </label>
-          <div className={`${boxClass} px-3.5`}>
-            <Icon name="mail" className="text-muted" />
-            <input id="login-email" type="email" autoComplete="email" placeholder="nama@email.com" className="min-w-0 flex-1 border-0 bg-transparent text-base text-fg outline-none placeholder:text-muted" />
-          </div>
-        </div>
-        <div className="flex flex-col gap-2">
-          <label htmlFor="login-pw" className={labelClass}>
-            {t.pw}
-          </label>
-          <div className={`${boxClass} pr-1.5 pl-3.5`}>
-            <Icon name="lock" className="text-muted" />
-            <input
-              id="login-pw"
-              type={show ? "text" : "password"}
-              autoComplete="current-password"
-              className="min-w-0 flex-1 border-0 bg-transparent text-base tracking-[2px] text-fg outline-none"
-            />
-            <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? t.hide : t.show} className="flex size-11 items-center justify-center border-0 bg-transparent text-muted">
-              <Icon name="eye" />
-            </button>
-          </div>
-        </div>
-        <div className="-mt-1.5 flex justify-end">
-          <Link href="/forgot-password" className="text-sm font-medium no-underline">
-            {t.forgot}
+      <form className="mt-9 flex flex-col gap-5" onSubmit={onSubmit} noValidate>
+        <TextField
+          id="login-email"
+          label={t("email")}
+          icon="mail"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder={tc("emailPlaceholder")}
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <PasswordField
+          id="login-pw"
+          label={t("password")}
+          icon="lock"
+          autoComplete="current-password"
+          error={errors.password?.message}
+          {...register("password")}
+        />
+        <div className="-mt-3 flex justify-end">
+          <Link href="/forgot-password" className="py-3 text-sm font-medium no-underline">
+            {t("forgot")}
           </Link>
         </div>
-        <Button type="submit" className="mt-1">
-          {t.cta}
+        <Button type="submit" className="mt-1" disabled={isSubmitting} aria-busy={isSubmitting}>
+          {isSubmitting ? t("loading") : t("cta")}
         </Button>
       </form>
     </AuthScreen>

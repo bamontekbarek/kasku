@@ -1,79 +1,96 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Icon } from "@/components/Icon";
-import { PasswordRules, passwordRules } from "@/components/PasswordRules";
-import { Button, Footer, Screen, TopBar, inputClass, labelClass } from "@/components/ui";
-import { cx } from "@/lib/format";
+import { useForm } from "react-hook-form";
+import { FormAlert, PasswordField, StrengthBar } from "@/components/form";
+import { PasswordRules } from "@/components/PasswordRules";
+import { Button, Footer, Screen, TopBar } from "@/components/ui";
+import { classifyAuthError, getSupabase } from "@/lib/auth/client";
+import { changePasswordSchema, checkPassword, type ChangePasswordInput } from "@/lib/validation/auth";
 
-export function ChangePasswordForm() {
+/** AUTH-08: old password, new password (AUTH-02 rules), confirmation; other sessions are revoked. */
+export function ChangePasswordForm({ email }: { email: string }) {
+  const t = useTranslations("changePassword");
+  const tc = useTranslations("common");
   const router = useRouter();
-  const [old, setOld] = useState("");
-  const [pw, setPw] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [show, setShow] = useState(true);
+  const [failure, setFailure] = useState<string | null>(null);
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting, isValid },
+  } = useForm<ChangePasswordInput>({
+    resolver: zodResolver(changePasswordSchema),
+    mode: "onChange",
+    defaultValues: { current: "", password: "", confirm: "" },
+  });
 
-  const rules = [...passwordRules(pw), { label: "Berbeda dari kata sandi lama", ok: pw.length > 0 && pw !== old }];
-  const score = rules.filter((r) => r.ok).length;
-  const color = score <= 1 ? "var(--color-danger)" : score <= 3 ? "var(--color-accent)" : "var(--color-success)";
-  const strength = pw.length === 0 ? "" : score <= 1 ? "Lemah" : score <= 3 ? "Cukup" : "Kuat";
+  const [current, pw, confirm] = watch(["current", "password", "confirm"]);
+  const checks = checkPassword(pw);
+  const score = pw ? Object.values(checks).filter(Boolean).length + (pw !== current ? 1 : 0) : 0;
   const match = confirm.length > 0 && confirm === pw;
-  const canSave = score === 4 && match && old.length > 0;
+
+  const onSubmit = handleSubmit(async ({ current: oldPassword, password }) => {
+    setFailure(null);
+    const supabase = await getSupabase();
+
+    // Re-check the current password first; a wrong one must not change anything.
+    const check = await supabase.auth.signInWithPassword({ email, password: oldPassword });
+    const kind = classifyAuthError(check.error);
+    if (kind) {
+      setFailure(kind === "invalidCredentials" ? t("wrongCurrent") : kind === "rateLimited" ? tc("tooManyRequests") : tc("genericError"));
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      setFailure(classifyAuthError(error) === "rateLimited" ? tc("tooManyRequests") : tc("genericError"));
+      return;
+    }
+    await supabase.auth.signOut({ scope: "others" });
+    router.replace("/settings?password=changed");
+    router.refresh();
+  });
 
   return (
     <Screen
-      header={<TopBar title="Ubah Kata Sandi" back="/settings" />}
+      header={<TopBar title={t("title")} back="/settings" />}
       footer={
         <Footer className="flex flex-col gap-2.5">
-          <p className="m-0 text-center text-xs text-muted">Kamu tetap masuk di perangkat ini. Perangkat lain akan diminta login ulang.</p>
-          {/* TODO: verify old password, then supabase.auth.updateUser */}
-          <Button disabled={!canSave} onClick={() => router.push("/settings")}>
-            Simpan kata sandi
+          <p className="m-0 text-center text-xs text-muted">{t("note")}</p>
+          <Button type="submit" form="change-password" disabled={!isValid || isSubmitting} aria-busy={isSubmitting}>
+            {isSubmitting ? tc("saving") : t("cta")}
           </Button>
         </Footer>
       }
     >
-      <form className="flex flex-col gap-5 px-4 pt-4 pb-6" onSubmit={(e) => e.preventDefault()}>
-        <p className="m-0 text-sm leading-5 text-muted">Demi keamanan, masukkan kata sandi lama sebelum membuat yang baru.</p>
+      <form id="change-password" className="flex flex-col gap-5 px-4 pt-4 pb-6" onSubmit={onSubmit} noValidate>
+        <p className="m-0 text-sm leading-5 text-muted">{t("intro")}</p>
 
-        <div className="flex flex-col gap-2">
-          <label htmlFor="cp-old" className={labelClass}>Kata sandi saat ini</label>
-          <input id="cp-old" type="password" autoComplete="current-password" value={old} onChange={(e) => setOld(e.target.value)} className={cx(inputClass, "h-[52px] tracking-[2px]")} />
-          <Link href="/forgot-password" className="self-end text-[13px] font-medium no-underline">
-            Lupa? Kirim link reset ke email
+        {failure && <FormAlert>{failure}</FormAlert>}
+
+        <div className="flex flex-col gap-1">
+          <PasswordField id="cp-old" label={t("current")} autoComplete="current-password" {...register("current")} />
+          <Link href={`/forgot-password?email=${encodeURIComponent(email)}`} className="self-end py-2.5 text-[13px] font-medium no-underline">
+            {t("forgot")}
           </Link>
         </div>
 
         <div className="h-px bg-surface" aria-hidden="true" />
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="cp-new" className={labelClass}>Kata sandi baru</label>
-          <div className="box-border flex h-[52px] items-center rounded-[10px] border border-raised bg-surface pr-1 pl-3.5 focus-within:border-accent">
-            <input id="cp-new" type={show ? "text" : "password"} autoComplete="new-password" value={pw} onChange={(e) => setPw(e.target.value)} className="min-w-0 flex-1 border-0 bg-transparent text-base text-fg outline-none" />
-            <button type="button" onClick={() => setShow(!show)} aria-label={show ? "Sembunyikan kata sandi" : "Tampilkan kata sandi"} className="flex size-11 items-center justify-center border-0 bg-transparent text-muted">
-              <Icon name="eye" />
-            </button>
-          </div>
-          <div className="mt-0.5 flex items-center gap-2.5">
-            <div className="grid flex-1 grid-cols-4 gap-1.5" aria-hidden="true">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-1 rounded-sm" style={{ background: i < score ? color : "var(--color-raised)" }} />
-              ))}
-            </div>
-            <span className="w-[52px] text-right text-[13px] font-semibold" style={{ color }} aria-live="polite">
-              {strength}
-            </span>
-          </div>
-          <PasswordRules rules={rules} />
+          <PasswordField id="cp-new" label={t("newPassword")} autoComplete="new-password" defaultVisible {...register("password")} />
+          <StrengthBar score={score} />
+          <PasswordRules password={pw} current={current} />
         </div>
 
         <div className="flex flex-col gap-2">
-          <label htmlFor="cp-confirm" className={labelClass}>Ulangi kata sandi baru</label>
-          <input id="cp-confirm" type={show ? "text" : "password"} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={cx(inputClass, "h-[52px]")} />
-          {match && <span className="text-[13px] text-success">Kata sandi cocok</span>}
-          {confirm.length > 0 && !match && <span className="text-[13px] text-danger">Kata sandi belum sama</span>}
+          <PasswordField id="cp-confirm" label={t("confirm")} autoComplete="new-password" defaultVisible error={errors.confirm?.message} {...register("confirm")} />
+          {match && <span className="text-[13px] text-success">{tc("passwordMatch")}</span>}
         </div>
       </form>
     </Screen>

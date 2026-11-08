@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { LegalCard, LegalLayout, LegalList, LegalSection } from "../LegalLayout";
 
-export const metadata: Metadata = { title: "Syarat & Ketentuan" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("meta"))("terms") };
+}
 
 export default function TermsPage() {
   return (
-    <LegalLayout title="Syarat & Ketentuan" heading="Syarat & Ketentuan Kasku">
+    <LegalLayout kind="terms">
       <p className="m-0">
         Syarat &amp; Ketentuan ini mengatur penggunaan aplikasi Kasku yang dikelola oleh [NAMA PERUSAHAAN / PENGELOLA]. Dengan membuat akun atau menggunakan Kasku, kamu menyetujui seluruh ketentuan di bawah ini.
       </p>

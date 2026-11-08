@@ -1,62 +1,87 @@
 # Kasku
 
-Expense tracker PWA ("Catat pengeluaran lebih cepat — cukup foto struknya"), built from the
-**Expense Tracker – UI Mockup** design canvas. Next.js (App Router) + TypeScript + Tailwind CSS v4.
+PWA pencatat pengeluaran (mobile-only) dengan scan struk memakai AI. Kebutuhan lengkap ada di
+[`docs/PRD.md`](docs/PRD.md), aturan kerja di [`CLAUDE.md`](CLAUDE.md).
 
-The UI is complete and interactive on mock data (`src/lib/data.ts`). The backend is not wired up yet:
-search for `TODO` to find the points where Supabase (auth, database, storage) and the receipt-reading
-AI route plug in.
+Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook Form + Zod, Supabase (cloud).
 
-## Run
+## Status
+
+| Milestone | Isi | Status |
+| --- | --- | --- |
+| M0 Fondasi | Supabase (`supabase/`), migrasi pertama, lint/typecheck/test, CI + deploy workflow | selesai di kode, perlu project Supabase + Vercel + GitHub |
+| M1 Akun | Register, login, verifikasi email, lupa/buat/ubah kata sandi, logout, ID/EN, legal, PWA | selesai di kode |
+| M2–M4 | Layar sudah ada tapi masih memakai data contoh (`src/lib/data.ts`) | belum |
+
+## Setup (Supabase cloud, tanpa Docker)
+
+1. Salin `.env.example` ke `.env.local`, isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   (Supabase → Project Settings → API).
+2. Hubungkan CLI ke project dan jalankan migrasi:
+
+   ```bash
+   npx supabase login
+   npx supabase link --project-ref <project-ref>
+   npx supabase db push                 # jalankan supabase/migrations
+   npx supabase config push             # pengaturan Auth + template email dari supabase/config.toml
+   npm run db:types                     # tulis ulang src/types/database.ts
+   ```
+
+3. `npm install && npm run dev` → http://localhost:3000
+
+`supabase config push` menimpa pengaturan Auth di project. Sesudah ada domain production, ganti
+`site_url` dan `additional_redirect_urls` di `supabase/config.toml` lalu push lagi.
+
+## Perintah
 
 ```bash
-npm install
-npm run dev        # http://localhost:3000
-npm run build      # production build
-npm run typecheck
+npm run dev
+npm run lint && npm run typecheck && npm test
+npm run build
 ```
 
-## Structure
+## Struktur
 
 ```
+messages/              id.json, en.json (semua teks UI yang sudah tersambung)
 src/
   app/
-    (auth)/     login, register, forgot-password(/sent), verify-email, reset-password
-    (legal)/    terms, privacy
-    (app)/      dashboard, welcome, transactions(/[id], /export), add,
-                scan(/crop, /processing, /review, /error), budget(/edit),
-                notifications, settings(/categories, /password, /notifications,
-                /delete-account, /install)
-    globals.css design tokens (@theme) — colors, fonts, animations
-  components/   Icon, ui (buttons, fields, badges, switch, segmented…), BottomNav,
-                Sheet, LangToggle, Receipt illustration, PasswordRules, ResendButton
-  lib/          data (mock), format (Rp formatting), i18n (ID/EN context)
+    (auth)/            masuk, daftar, verifikasi, lupa & buat kata sandi
+    (legal)/           syarat, privasi
+    (app)/             dashboard, riwayat, tambah, scan, anggaran, akun …
+    auth/confirm/      target link email (verifikasi + reset), verifyOtp(token_hash)
+    actions/locale.ts  ganti bahasa → cookie NEXT_LOCALE + profiles.locale
+    offline/           halaman cadangan service worker
+    pwa-icon/[size]/   ikon PNG untuk manifest
+  components/          ui, form (TextField, PasswordField, …), PasswordRules, …
+  i18n/                konfigurasi next-intl (tanpa prefix locale di URL)
+  lib/
+    supabase/          client browser, server, middleware (refresh sesi + guard rute)
+    auth/              helper auth, guard rute, data akun
+    validation/        skema Zod (dipakai form; nanti juga untuk JSON AI)
+  middleware.ts
+public/sw.js           service worker kecil tanpa library
+supabase/
+  config.toml          pengaturan Auth (verifikasi wajib, aturan kata sandi, template email)
+  migrations/          skema database
+  templates/           email verifikasi + reset (bahasa Indonesia)
+.github/workflows/     ci.yml (PR + dev), deploy.yml (main → migrasi → Vercel)
 ```
 
-## Design notes
+## Catatan desain
 
-- **Forced mobile view**: every screen sits in a centered column (`max-width: 430px`, `min-height: 100dvh`);
-  the area outside it is a plain dark background. There is no separate desktop layout.
-- The mockup's fake status bar / home indicator are replaced by `env(safe-area-inset-*)` padding.
-- Language toggle (ID/EN) is wired on Login, Register, Settings and the bottom nav; it persists in `localStorage`.
+- Tampilan dipaksa mobile: satu kolom `max-width: 430px` di tengah layar.
+- Bahasa tidak ada di URL. Pilihan bahasa disimpan di cookie dan `profiles.locale`, dan ikut terbawa saat login di perangkat lain.
+- Link di email memakai `token_hash` + `{{ .RedirectTo }}`, jadi bisa dibuka di browser mana pun dan ikut domain preview atau localhost.
+- `supabase-js` baru dimuat saat tombol auth ditekan, supaya JS awal layar auth ±163 KB (target < 200 KB).
 
-## Preview states
+## State pratinjau mockup
 
-The design's tweakable states are reachable through query params:
-
-| Screen | URL |
+| Layar | URL |
 | --- | --- |
-| Login error | `/login?error=1` |
 | Dashboard offline banner | `/dashboard?offline=1` |
-| New user dashboard | `/welcome` |
-| Scan quota used up | `/add?quota=0` |
-| Blurry / dark photo | `/scan/crop?quality=blur`, `/scan/crop?quality=dark` |
-| Scan errors | `/scan/error?kind=notReceipt\|failed\|tooFast\|uploadFailed` |
-| Expired reset link | `/reset-password?expired=1` |
-
-## Scan flow (to implement)
-
-Camera / gallery → upload to Supabase Storage → API route sends the image to the AI model →
-JSON `{ amount, merchant, date, category, items }` → prefill the review form. Fields filled by AI carry an
-**AI** badge, low-confidence fields a **Cek lagi** badge, and edited fields **Diubah**, so the user checks
-before saving.
+| Dashboard user baru | `/welcome` |
+| Kuota scan habis | `/add?quota=0` |
+| Foto buram / gelap | `/scan/crop?quality=blur`, `/scan/crop?quality=dark` |
+| Jenis error scan | `/scan/error?kind=notReceipt\|failed\|tooFast\|uploadFailed` |
+| Link reset kedaluwarsa | `/reset-password?expired=1` |

@@ -1,48 +1,40 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from "react";
+import { useLocale } from "next-intl";
+import { useRouter } from "next/navigation";
+import { useCallback, useTransition } from "react";
+import { setLocale } from "@/app/actions/locale";
+import type { Locale } from "@/i18n/config";
 
-export type Lang = "id" | "en";
+export type Lang = Locale;
 
-type LangContextValue = { lang: Lang; setLang: (lang: Lang) => void };
-
-const LangContext = createContext<LangContextValue>({ lang: "id", setLang: () => {} });
-
-const STORAGE_KEY = "kasku.lang";
-
-export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("id");
-
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(STORAGE_KEY);
-      if (saved === "id" || saved === "en") setLangState(saved);
-    } catch {
-      /* storage unavailable — keep default */
-    }
-  }, []);
-
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
-
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      /* ignore */
-    }
-  }, []);
-
-  return <LangContext.Provider value={{ lang, setLang }}>{children}</LangContext.Provider>;
-}
-
+/**
+ * Active UI language (from next-intl) plus a setter that persists it in a cookie and the
+ * user's profile, then re-renders server components in the new language.
+ */
 export function useLang() {
-  return useContext(LangContext);
+  const lang = useLocale();
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+
+  const setLang = useCallback(
+    (next: Lang) => {
+      if (next === lang) return;
+      startTransition(async () => {
+        await setLocale(next);
+        router.refresh();
+      });
+    },
+    [lang, router],
+  );
+
+  return { lang, setLang, pending };
 }
 
-/** Pick the string table for the active language. */
+/**
+ * Pick an inline string table for the active language.
+ * @deprecated Legacy mock screens only. New/wired screens use `useTranslations` with messages/{id,en}.json.
+ */
 export function useT<T>(table: Record<Lang, T>): T {
-  return table[useLang().lang];
+  return table[useLocale()];
 }

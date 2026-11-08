@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { LegalCard, LegalLayout, LegalList, LegalSection } from "../LegalLayout";
 
-export const metadata: Metadata = { title: "Kebijakan Privasi" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("meta"))("privacy") };
+}
 
 function B({ children }: { children: React.ReactNode }) {
   return <span className="font-medium text-fg">{children}</span>;
@@ -10,7 +13,7 @@ function B({ children }: { children: React.ReactNode }) {
 
 export default function PrivacyPage() {
   return (
-    <LegalLayout title="Kebijakan Privasi" heading="Kebijakan Privasi Kasku">
+    <LegalLayout kind="privacy">
       <div className="flex flex-col gap-2 rounded-xl bg-surface p-3.5">
         <h2 className="m-0 text-[15px] font-semibold text-fg">Ringkasnya</h2>
         <LegalList>

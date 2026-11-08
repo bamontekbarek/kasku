@@ -3,7 +3,7 @@ import Link from "next/link";
 import { TabScreen } from "@/components/BottomNav";
 import { Icon } from "@/components/Icon";
 import { Avatar, ButtonLink, ChevronRight, ProgressBar } from "@/components/ui";
-import { user } from "@/lib/data";
+import { getAccount } from "@/lib/auth/account";
 
 export const metadata: Metadata = { title: "Selamat Datang" };
 
@@ -14,7 +14,9 @@ const steps = [
 ];
 
 /** Dashboard for a brand-new user with no transactions yet. */
-export default function WelcomePage() {
+export default async function WelcomePage() {
+  const account = await getAccount();
+  const user = { name: account.fullName || account.email, initials: account.initials };
   return (
     <TabScreen active="home">
       <header className="flex h-14 items-center justify-between px-4">

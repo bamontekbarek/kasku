@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { IBM_Plex_Sans } from "next/font/google";
-import { LangProvider } from "@/lib/i18n";
+import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
 const plex = IBM_Plex_Sans({
@@ -10,12 +12,16 @@ const plex = IBM_Plex_Sans({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: { default: "Kasku", template: "%s · Kasku" },
-  description: "Catat pengeluaran lebih cepat — cukup foto struknya.",
-  applicationName: "Kasku",
-  appleWebApp: { capable: true, title: "Kasku", statusBarStyle: "black-translucent" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("meta");
+  return {
+    title: { default: "Kasku", template: "%s · Kasku" },
+    description: t("description"),
+    applicationName: "Kasku",
+    appleWebApp: { capable: true, title: "Kasku", statusBarStyle: "black-translucent" },
+    icons: { icon: "/icon.svg", apple: "/pwa-icon/180" },
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#0B0E11",
@@ -24,14 +30,16 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="id" className={plex.variable}>
+    <html lang={locale} className={plex.variable}>
       <body>
-        <LangProvider>
+        <NextIntlClientProvider>
           {/* Forced mobile view at every screen size: one centered column, plain dark outside. */}
           <div className="app-shell relative mx-auto min-h-dvh max-w-[430px] border-x border-surface bg-bg">{children}</div>
-        </LangProvider>
+        </NextIntlClientProvider>
+        <ServiceWorker />
       </body>
     </html>
   );
