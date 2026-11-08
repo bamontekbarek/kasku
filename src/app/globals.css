@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+/*
+ * Kasku design tokens — taken from the "Expense Tracker – UI Mockup" canvas.
+ * Dark-only UI: near-black ground, graphite surfaces, one yellow accent.
+ */
+@theme {
+  --font-sans: var(--font-plex), "IBM Plex Sans", system-ui, sans-serif;
+
+  /* Ground & surfaces */
+  --color-outer: #050607;   /* area outside the mobile column on desktop */
+  --color-bg: #0b0e11;      /* app background */
+  --color-card: #181a20;    /* grouped lists, bottom nav */
+  --color-surface: #1e2329; /* inputs, cards, sheets */
+  --color-raised: #2b3139;  /* secondary buttons, borders, tracks */
+  --color-edge: #3a414c;    /* dashed borders, inactive bars, handles */
+
+  /* Text */
+  --color-fg: #eaecef;
+  --color-fg-2: #b7bdc6;
+  --color-muted: #848e9c;
+  --color-faint: #5e6673;
+
+  /* Accent (yellow) */
+  --color-accent: #fcd535;
+  --color-accent-hover: #ffe57a;
+  --color-accent-ink: #181a20;
+  --color-accent-soft: #2e2a12;
+  --color-accent-line: #3a3412;
+
+  /* Status */
+  --color-success: #2ebd85;
+  --color-success-soft: #12291f;
+  --color-danger: #ff5c70;
+  --color-danger-soft: #2a1519;
+  --color-danger-line: #4a1e26;
+  --color-warn: #f5913e;
+  --color-warn-soft: #33230f;
+  --color-warn-line: #5a3d16;
+  --color-info: #4c8df6;
+  --color-info-soft: #14233d;
+  --color-violet: #a88bfa;
+  --color-violet-soft: #241d3a;
+  --color-pink: #f06ba8;
+
+  /* Receipt paper illustration */
+  --color-paper: #e9e6df;
+
+  --animate-kscan: kscan 2.4s ease-in-out infinite;
+  --animate-kspin: kspin 0.9s linear infinite;
+
+  @keyframes kscan {
+    0% { top: 6%; }
+    50% { top: 90%; }
+    100% { top: 6%; }
+  }
+  @keyframes kspin {
+    to { transform: rotate(360deg); }
+  }
+}
+
+@layer base {
+  html {
+    background: var(--color-outer);
+    color-scheme: dark;
+  }
+  body {
+    margin: 0;
+    background: var(--color-outer);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  a {
+    color: var(--color-accent);
+  }
+  a:hover {
+    color: var(--color-accent-hover);
+  }
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Safe areas replace the mockup's fake status bar (44px) and home indicator (34px). */
+@utility pt-safe {
+  padding-top: max(env(safe-area-inset-top), 12px);
+}
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 24px);
+}
