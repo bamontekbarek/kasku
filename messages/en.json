@@ -17,7 +17,12 @@
     "add": "Add Expense",
     "history": "History",
     "editExpense": "Edit Expense",
-    "categories": "Manage Categories"
+    "categories": "Manage Categories",
+    "camera": "Receipt Photo",
+    "crop": "Adjust Photo",
+    "processing": "Reading Receipt",
+    "scanError": "Scan Failed",
+    "review": "Review Scan Result"
   },
   "common": {
     "back": "Back",
@@ -305,7 +310,8 @@
     "itemsMismatch": "Items total {items} differs from the amount {amount}.",
     "useItemsTotal": "Use items total",
     "notFound": "This transaction no longer exists. It may have been deleted on another device.",
-    "manageCategories": "Manage categories"
+    "manageCategories": "Manage categories",
+    "deleteBodyPhoto": "<b>{name} · {amount}</b> will be deleted permanently, including the receipt photo and item details."
   },
   "history": {
     "title": "History",
@@ -355,6 +361,108 @@
       "blue": "Blue",
       "green": "Green",
       "gray": "Grey"
+    }
+  },
+  "scan": {
+    "camera": {
+      "title": "Receipt Photo",
+      "close": "Close camera",
+      "flash": "Flash",
+      "gallery": "Gallery",
+      "shutter": "Take photo",
+      "hint": "Keep the whole receipt in the frame, well lit and sharp.",
+      "guide": "Fit the receipt inside the frame",
+      "noCamera": "The camera can't be opened here. Use your phone camera or pick a photo from the gallery.",
+      "openCamera": "Open camera"
+    },
+    "crop": {
+      "title": "Adjust Photo",
+      "retake": "Retake",
+      "rotate": "Rotate 90 degrees",
+      "loading": "Preparing photo…",
+      "preparing": "Processing photo…",
+      "ok": "Photo looks sharp. Drag the yellow corners if the edges aren't right.",
+      "blurTitle": "Photo looks blurry.",
+      "blurBody": "Hold your phone steadier and focus on the receipt text. Blurry photos are often misread by the AI.",
+      "darkTitle": "Photo is too dark.",
+      "darkBody": "Find better light or turn on the flash so the numbers can be read.",
+      "use": "Use photo",
+      "useAnyway": "Use anyway",
+      "note": "The photo is cropped, shrunk and turned black-and-white before sending to save data.",
+      "loadFailed": "This photo can't be opened. Try another photo or image.",
+      "corner": {
+        "tl": "Top-left corner",
+        "tr": "Top-right corner",
+        "bl": "Bottom-left corner",
+        "br": "Bottom-right corner"
+      }
+    },
+    "processing": {
+      "title": "Reading Receipt",
+      "badge": "Powered by AI",
+      "reading": "AI is reading the receipt…",
+      "done": "Receipt read",
+      "body": "Total, store name, date and items will be filled into the form.",
+      "step1": "Image uploaded",
+      "step2": "Recognising receipt text",
+      "step3": "Building the expense",
+      "step4": "Filling in the form",
+      "cancel": "Cancel, fill in manually"
+    },
+    "error": {
+      "title": "Scan Receipt",
+      "manual": "Fill in manually",
+      "quotaLeft": "Scans left today: {left} of {total}",
+      "notReceiptTitle": "This doesn't look like a receipt",
+      "notReceiptBody": "The AI couldn't find a total in this photo. Make sure you photograph a receipt or bill.",
+      "notReceiptCta": "Retake",
+      "failedTitle": "The receipt couldn't be read",
+      "failedBody": "The AI server is busy or not responding. This didn't use up a scan. Try again in a moment.",
+      "failedCta": "Try again",
+      "tooFastTitle": "Wait a moment",
+      "tooFastBody": "You just scanned several receipts. Try again in {seconds} seconds.",
+      "tooFastBodyNoTime": "You just scanned several receipts. Try again in a moment.",
+      "tooFastCta": "Back to the form",
+      "uploadFailedTitle": "Photo wasn't sent",
+      "uploadFailedBody": "The internet connection dropped. The photo is still on your phone, so no need to take it again.",
+      "uploadFailedCta": "Send photo again",
+      "quotaTitle": "No scans left today",
+      "quotaBody": "You've used all of today's scans. You can still fill in manually. Scans reset tomorrow at 00:00 WIT.",
+      "quotaCta": "Fill in manually",
+      "pausedTitle": "Scanning is paused",
+      "pausedBody": "Scanning is switched off for now because usage today is very high. Manual entry still works.",
+      "pausedCta": "Fill in manually"
+    },
+    "review": {
+      "title": "Review Scan Result",
+      "rescan": "Scan again",
+      "save": "Save",
+      "needsCheck": "{count} fields need checking",
+      "ready": "Ready to save",
+      "intro": "Everything can be edited. Compare with the receipt photo before saving.",
+      "viewPhoto": "View receipt photo",
+      "legendLabel": "Label legend",
+      "badgeAi": "AI",
+      "badgeCheck": "Check",
+      "badgeEdited": "Edited",
+      "legendAi": "filled by AI",
+      "legendCheck": "AI is unsure",
+      "legendEdited": "edited by you",
+      "merchant": "Store name",
+      "dateCheck": "The date on the receipt is unclear, make sure it's right.",
+      "items": "Item details",
+      "tapToEdit": "tap to edit",
+      "itemPlaceholder": "Item name",
+      "priceCheck": "Price is unclear on the receipt, check it.",
+      "itemsTotal": "Items total",
+      "mismatch": "Items total <b>{items}</b> differs from the amount <b>{amount}</b>. There may be a discount, tax or a missed item.",
+      "useItems": "Use items total",
+      "keepAmount": "Keep amount",
+      "photoTitle": "Receipt photo",
+      "closePhoto": "Close photo",
+      "pinch": "Pinch or double-tap to zoom",
+      "alreadySaved": "This receipt has already been saved as a transaction.",
+      "openHistory": "Open History"
     }
   }
 }

@@ -9,31 +9,6 @@ export const user = {
   email: "budi@email.com",
 };
 
-export type Category = {
-  name: string;
-  short: string;
-  color: string;
-  locked?: boolean;
-  monthCount: number;
-};
-
-export const categories: Category[] = [
-  { name: "Makanan & Minuman", short: "Makanan", color: "#FCD535", monthCount: 28 },
-  { name: "Belanja Harian", short: "Belanja", color: "#F5913E", monthCount: 9 },
-  { name: "Transportasi", short: "Transportasi", color: "#4C8DF6", monthCount: 12 },
-  { name: "Tagihan", short: "Tagihan", color: "#A88BFA", monthCount: 4 },
-  { name: "Kesehatan", short: "Kesehatan", color: "#2EBD85", monthCount: 3 },
-  { name: "Hiburan", short: "Hiburan", color: "#F06BA8", monthCount: 2 },
-  { name: "Lainnya", short: "Lainnya", color: "#5E6673", monthCount: 5, locked: true },
-];
-
-export const categoryNames = categories.map((c) => c.name);
-
-/** Full payment list used by the scan review mockup (M3). */
-export const paymentOptions = ["Tunai", "Debit", "QRIS", "Kartu kredit", "E-wallet"];
-
-export const DAILY_SCAN_QUOTA = 20;
-
 export const budget = {
   month: "November 2026",
   total: 5000000,
@@ -45,22 +20,6 @@ export const budget = {
     { name: "Transportasi", used: 642900, limit: 700000, color: "#4C8DF6", lastMonth: 640000 },
     { name: "Tagihan", used: 600100, limit: 800000, color: "#A88BFA", lastMonth: 590000 },
     { name: "Lainnya", used: 472400, limit: 800000, color: "#5E6673", lastMonth: 53000 },
-  ],
-};
-
-export const scannedReceipt = {
-  amount: 187400,
-  merchant: "Toko Maju Jaya",
-  date: "2026-11-06",
-  time: "19:42",
-  category: "Belanja Harian",
-  payment: "Debit",
-  items: [
-    { id: 1, name: "Beras 5 kg", price: 74500, low: false },
-    { id: 2, name: "Minyak goreng 2 L", price: 38900, low: false },
-    { id: 3, name: "Telur ayam 1 kg", price: 31000, low: false },
-    { id: 4, name: "Sabun cuci piring", price: 25500, low: true },
-    { id: 5, name: "Gula pasir 1 kg", price: 17500, low: false },
   ],
 };
 

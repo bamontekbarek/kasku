@@ -25,6 +25,7 @@ export type ExpenseRow = {
 
 export type ExpenseDetail = Omit<ExpenseRow, "items"> & {
   createdAt: string;
+  receiptPath: string | null;
   items: Array<{ name: string; price: number }>;
 };
 
@@ -126,7 +127,7 @@ export async function getExpense(id: string): Promise<ExpenseDetail | null> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("expenses")
-    .select("id, amount, merchant, note, spent_at, created_at, category_id, payment_method, source, expense_items(name, price, position)")
+    .select("id, amount, merchant, note, spent_at, created_at, category_id, payment_method, source, expense_items(name, price, position), receipts(storage_path)")
     .eq("id", id)
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -138,6 +139,7 @@ export async function getExpense(id: string): Promise<ExpenseDetail | null> {
     note: data.note,
     spentAt: data.spent_at,
     createdAt: data.created_at,
+    receiptPath: data.receipts?.storage_path ?? null,
     categoryId: data.category_id,
     payment: data.payment_method,
     source: data.source,

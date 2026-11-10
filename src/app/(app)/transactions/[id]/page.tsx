@@ -5,6 +5,7 @@ import { getAccount } from "@/lib/auth/account";
 import { localParts } from "@/lib/expenses/dates";
 import { getCategories, getExpense } from "@/lib/expenses/queries";
 import { shortDate } from "@/lib/expenses/summary";
+import { receiptPhotoUrl } from "@/lib/scan/queries";
 import { EditExpenseForm } from "./EditExpenseForm";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,6 +17,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
   const [account, expense, categories, locale, t] = await Promise.all([getAccount(), getExpense(id), getCategories(), getLocale(), getTranslations("expense")]);
   if (!expense) notFound();
 
+  const photoUrl = expense.receiptPath ? await receiptPhotoUrl(expense.receiptPath) : null;
   const spent = localParts(expense.spentAt, account.timeZone);
   const recorded = localParts(expense.createdAt, account.timeZone);
 
@@ -25,6 +27,7 @@ export default async function EditExpensePage({ params }: { params: Promise<{ id
       expense={{
         id: expense.id,
         scanned: expense.source === "scan",
+        photoUrl,
         recordedAt: t("recordedAt", { date: shortDate(recorded.date, locale), time: recorded.time }),
         values: {
           amount: expense.amount,

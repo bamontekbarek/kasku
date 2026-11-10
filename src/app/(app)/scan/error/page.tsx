@@ -1,55 +1,59 @@
 import type { Metadata } from "next";
-import { ButtonLink, StateIcon, TopBar } from "@/components/ui";
+import { getTranslations } from "next-intl/server";
 import type { IconName } from "@/components/Icon";
+import { ButtonLink, StateIcon, TopBar } from "@/components/ui";
+import { scanConfig } from "@/lib/scan/config";
 
-export const metadata: Metadata = { title: "Scan Gagal" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("meta"))("scanError") };
+}
 
-type Kind = "notReceipt" | "failed" | "tooFast" | "uploadFailed";
+type Kind = "notReceipt" | "failed" | "tooFast" | "uploadFailed" | "quota" | "paused";
 
-const D: Record<Kind, { title: string; body: string; primary: string; href: string; bg: string; fg: string; icon: IconName; quota?: string }> = {
-  notReceipt: {
-    title: "Ini sepertinya bukan struk",
-    body: "AI tidak menemukan total belanja di foto ini. Pastikan yang difoto adalah struk atau nota pembayaran.",
-    primary: "Foto ulang", href: "/scan", bg: "var(--color-warn-soft)", fg: "var(--color-warn)", icon: "receiptX",
-    quota: "Sisa scan hari ini: 16 dari 20",
-  },
-  failed: {
-    title: "Struk belum bisa dibaca",
-    body: "Server AI sedang sibuk atau tidak merespons. Kuota scan kamu tidak terpotong. Coba lagi sebentar lagi.",
-    primary: "Coba lagi", href: "/scan/processing", bg: "var(--color-danger-soft)", fg: "var(--color-danger)", icon: "alertCircle",
-  },
-  tooFast: {
-    title: "Tunggu sebentar",
-    body: "Kamu baru saja scan beberapa struk. Coba lagi dalam 40 detik.",
-    primary: "Kembali ke form", href: "/add", bg: "var(--color-info-soft)", fg: "var(--color-info)", icon: "timer",
-    quota: "Sisa scan hari ini: 14 dari 20",
-  },
-  uploadFailed: {
-    title: "Foto gagal terkirim",
-    body: "Koneksi internet terputus. Foto sudah tersimpan di HP, jadi tidak perlu memotret lagi.",
-    primary: "Kirim ulang foto", href: "/scan/processing", bg: "var(--color-surface)", fg: "var(--color-fg-2)", icon: "wifiOff",
-  },
+const LOOK: Record<Kind, { href: string; bg: string; fg: string; icon: IconName }> = {
+  notReceipt: { href: "/scan", bg: "var(--color-warn-soft)", fg: "var(--color-warn)", icon: "receiptX" },
+  // The photo and receipt id are still in memory, so retrying needs no new photo.
+  failed: { href: "/scan/processing", bg: "var(--color-danger-soft)", fg: "var(--color-danger)", icon: "alertCircle" },
+  tooFast: { href: "/add", bg: "var(--color-info-soft)", fg: "var(--color-info)", icon: "timer" },
+  uploadFailed: { href: "/scan/processing", bg: "var(--color-surface)", fg: "var(--color-fg-2)", icon: "wifiOff" },
+  quota: { href: "/add", bg: "var(--color-warn-soft)", fg: "var(--color-warn)", icon: "timer" },
+  paused: { href: "/add", bg: "var(--color-surface)", fg: "var(--color-fg-2)", icon: "alertCircle" },
 };
 
-/** Scan failure states: `?kind=notReceipt|failed|tooFast|uploadFailed`. */
-export default async function ScanErrorPage({ searchParams }: { searchParams: Promise<{ kind?: string }> }) {
-  const { kind } = await searchParams;
-  const d = D[(kind as Kind) in D ? (kind as Kind) : "notReceipt"];
+/** SCAN-05, SCAN-06: `?kind=notReceipt|failed|tooFast|uploadFailed|quota|paused&remaining=&retry=`. */
+export default async function ScanErrorPage({ searchParams }: { searchParams: Promise<{ kind?: string; remaining?: string; retry?: string }> }) {
+  const { kind: k, remaining, retry } = await searchParams;
+  const kind: Kind = k && k in LOOK ? (k as Kind) : "failed";
+  const t = await getTranslations("scan.error");
+  const look = LOOK[kind];
+  const left = remaining !== undefined && /^\d+$/.test(remaining) ? Number(remaining) : null;
+  const seconds = retry !== undefined && /^\d+$/.test(retry) ? Number(retry) : null;
+
+  const body =
+    kind === "tooFast" ? (seconds ? t("tooFastBody", { seconds }) : t("tooFastBodyNoTime")) : t(`${kind}Body`);
 
   return (
     <div className="pt-safe pb-safe flex min-h-dvh flex-col bg-bg">
-      <TopBar title="Scan Struk" back="/add" />
+      <TopBar title={t("title")} back="/add" />
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-7 text-center">
-        <StateIcon icon={d.icon} bg={d.bg} fg={d.fg} />
-        <h2 className="mt-2 mb-0 text-2xl leading-[30px] font-bold" aria-live="polite">{d.title}</h2>
-        <p className="m-0 text-[15px] leading-[22px] text-muted">{d.body}</p>
-        {d.quota && (
-          <span className="mt-1 inline-flex h-7 items-center rounded-full bg-surface px-3 text-[13px] text-fg-2">{d.quota}</span>
+        <StateIcon icon={look.icon} bg={look.bg} fg={look.fg} />
+        <h2 className="mt-2 mb-0 text-2xl leading-[30px] font-bold" aria-live="polite">
+          {t(`${kind}Title`)}
+        </h2>
+        <p className="m-0 text-[15px] leading-[22px] text-muted">{body}</p>
+        {left !== null && kind !== "quota" && (
+          <span className="mt-1 inline-flex h-7 items-center rounded-full bg-surface px-3 text-[13px] text-fg-2">
+            {t("quotaLeft", { left, total: scanConfig().dailyLimit })}
+          </span>
         )}
       </div>
       <div className="flex flex-col gap-2.5 px-4 pt-3">
-        <ButtonLink href={d.href}>{d.primary}</ButtonLink>
-        <ButtonLink href="/add" variant="surface" size="md">Isi manual saja</ButtonLink>
+        <ButtonLink href={look.href}>{t(`${kind}Cta`)}</ButtonLink>
+        {look.href !== "/add" && (
+          <ButtonLink href="/add" variant="surface" size="md">
+            {t("manual")}
+          </ButtonLink>
+        )}
       </div>
     </div>
   );

@@ -13,12 +13,14 @@ import { Button, ButtonLink, Field, Footer, Screen, TopBar, inputClass } from "@
 import type { Category } from "@/lib/expenses/queries";
 import { expenseSchema, type ExpenseInput } from "@/lib/expenses/schema";
 import { cx } from "@/lib/format";
+import { usePickPhoto } from "@/lib/scan/usePickPhoto";
 
 /** EXP-01 – EXP-04: manual entry with the "fill in from a receipt" card on top. */
 export function AddExpenseForm({ categories, today, quotaLeft, quotaTotal }: { categories: Category[]; today: string; quotaLeft: number; quotaTotal: number }) {
   const t = useTranslations("expense");
   const tc = useTranslations("common");
   const router = useRouter();
+  const pick = usePickPhoto();
   const [failure, setFailure] = useState<string | null>(null);
   const firstCategory = categories.find((c) => !c.isSystem) ?? categories[0];
 
@@ -85,8 +87,7 @@ export function AddExpenseForm({ categories, today, quotaLeft, quotaTotal }: { c
                 <label className="flex h-[46px] cursor-pointer items-center justify-center gap-2 rounded-[10px] bg-raised text-[15px] font-semibold text-fg">
                   <Icon name="image" strokeWidth={2} />
                   {t("gallery")}
-                  {/* M3: optimise + upload the picked image (SCAN-02). */}
-                  <input type="file" accept="image/*" className="sr-only" onChange={(e) => e.target.files?.length && router.push("/scan/crop")} />
+                  <input type="file" accept="image/*" className="sr-only" onChange={pick} />
                 </label>
               </div>
               <p className="m-0 text-center text-xs text-muted tabular-nums">

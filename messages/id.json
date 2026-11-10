@@ -17,7 +17,12 @@
     "add": "Tambah Pengeluaran",
     "history": "Riwayat",
     "editExpense": "Edit Pengeluaran",
-    "categories": "Kelola Kategori"
+    "categories": "Kelola Kategori",
+    "camera": "Foto Struk",
+    "crop": "Rapikan Foto",
+    "processing": "Membaca Struk",
+    "scanError": "Scan Gagal",
+    "review": "Periksa Hasil Scan"
   },
   "common": {
     "back": "Kembali",
@@ -305,7 +310,8 @@
     "itemsMismatch": "Total item {items} berbeda dari jumlah {amount}.",
     "useItemsTotal": "Pakai total item",
     "notFound": "Transaksi ini sudah tidak ada. Mungkin sudah dihapus di perangkat lain.",
-    "manageCategories": "Kelola kategori"
+    "manageCategories": "Kelola kategori",
+    "deleteBodyPhoto": "<b>{name} · {amount}</b> akan dihapus permanen beserta foto struk dan rincian itemnya."
   },
   "history": {
     "title": "Riwayat",
@@ -355,6 +361,108 @@
       "blue": "Biru",
       "green": "Hijau",
       "gray": "Abu-abu"
+    }
+  },
+  "scan": {
+    "camera": {
+      "title": "Foto Struk",
+      "close": "Tutup kamera",
+      "flash": "Lampu kilat",
+      "gallery": "Galeri",
+      "shutter": "Ambil foto",
+      "hint": "Pastikan seluruh struk masuk bingkai, terang, dan tidak buram.",
+      "guide": "Posisikan struk di dalam bingkai",
+      "noCamera": "Kamera tidak bisa dibuka langsung di sini. Pakai kamera HP atau pilih foto dari galeri.",
+      "openCamera": "Buka kamera"
+    },
+    "crop": {
+      "title": "Rapikan Foto",
+      "retake": "Foto ulang",
+      "rotate": "Putar 90 derajat",
+      "loading": "Menyiapkan foto…",
+      "preparing": "Memproses foto…",
+      "ok": "Foto jelas. Geser sudut kuning jika batas struk belum pas.",
+      "blurTitle": "Foto terlihat buram.",
+      "blurBody": "Pegang HP lebih stabil dan pastikan fokus di tulisan struk. Foto buram sering salah dibaca AI.",
+      "darkTitle": "Foto terlalu gelap.",
+      "darkBody": "Cari tempat lebih terang atau nyalakan lampu kilat agar angka di struk terbaca.",
+      "use": "Gunakan foto",
+      "useAnyway": "Tetap pakai",
+      "note": "Foto dipotong, diperkecil, dan dijadikan hitam-putih sebelum dikirim agar hemat kuota.",
+      "loadFailed": "Foto ini tidak bisa dibuka. Coba foto atau gambar lain.",
+      "corner": {
+        "tl": "Sudut kiri atas",
+        "tr": "Sudut kanan atas",
+        "bl": "Sudut kiri bawah",
+        "br": "Sudut kanan bawah"
+      }
+    },
+    "processing": {
+      "title": "Membaca Struk",
+      "badge": "Ditenagai AI",
+      "reading": "AI sedang membaca struk…",
+      "done": "Struk berhasil dibaca",
+      "body": "Total, nama toko, tanggal, dan item belanja akan langsung diisi ke form.",
+      "step1": "Gambar diunggah",
+      "step2": "Mengenali teks di struk",
+      "step3": "Menyusun data pengeluaran",
+      "step4": "Mengisi form otomatis",
+      "cancel": "Batal, isi manual"
+    },
+    "error": {
+      "title": "Scan Struk",
+      "manual": "Isi manual saja",
+      "quotaLeft": "Sisa scan hari ini: {left} dari {total}",
+      "notReceiptTitle": "Ini sepertinya bukan struk",
+      "notReceiptBody": "AI tidak menemukan total belanja di foto ini. Pastikan yang difoto adalah struk atau nota pembayaran.",
+      "notReceiptCta": "Foto ulang",
+      "failedTitle": "Struk belum bisa dibaca",
+      "failedBody": "Server AI sedang sibuk atau tidak merespons. Kuota scan kamu tidak terpotong. Coba lagi sebentar lagi.",
+      "failedCta": "Coba lagi",
+      "tooFastTitle": "Tunggu sebentar",
+      "tooFastBody": "Kamu baru saja scan beberapa struk. Coba lagi dalam {seconds} detik.",
+      "tooFastBodyNoTime": "Kamu baru saja scan beberapa struk. Coba lagi sebentar lagi.",
+      "tooFastCta": "Kembali ke form",
+      "uploadFailedTitle": "Foto gagal terkirim",
+      "uploadFailedBody": "Koneksi internet terputus. Foto sudah tersimpan di HP, jadi tidak perlu memotret lagi.",
+      "uploadFailedCta": "Kirim ulang foto",
+      "quotaTitle": "Kuota scan hari ini habis",
+      "quotaBody": "Kamu sudah memakai semua scan hari ini. Kamu tetap bisa isi manual. Kuota kembali besok pukul 00.00 WIT.",
+      "quotaCta": "Isi manual",
+      "pausedTitle": "Scan sedang istirahat",
+      "pausedBody": "Fitur scan dimatikan sementara karena pemakaian hari ini sangat tinggi. Input manual tetap bisa dipakai.",
+      "pausedCta": "Isi manual"
+    },
+    "review": {
+      "title": "Periksa Hasil Scan",
+      "rescan": "Scan ulang",
+      "save": "Simpan",
+      "needsCheck": "{count} data perlu kamu cek",
+      "ready": "Data siap disimpan",
+      "intro": "Semua isian bisa diedit. Bandingkan dengan foto struk sebelum menyimpan.",
+      "viewPhoto": "Lihat foto struk",
+      "legendLabel": "Keterangan label",
+      "badgeAi": "AI",
+      "badgeCheck": "Cek lagi",
+      "badgeEdited": "Diubah",
+      "legendAi": "diisi AI",
+      "legendCheck": "AI kurang yakin",
+      "legendEdited": "sudah kamu edit",
+      "merchant": "Nama toko",
+      "dateCheck": "Tanggal di struk kurang jelas, pastikan sudah benar.",
+      "items": "Rincian item",
+      "tapToEdit": "ketuk untuk edit",
+      "itemPlaceholder": "Nama item",
+      "priceCheck": "Harga kurang jelas di struk, cek lagi.",
+      "itemsTotal": "Total item",
+      "mismatch": "Total item <b>{items}</b> berbeda dengan jumlah <b>{amount}</b>. Mungkin ada diskon, pajak, atau item yang terlewat.",
+      "useItems": "Pakai total item",
+      "keepAmount": "Biarkan jumlah",
+      "photoTitle": "Foto struk",
+      "closePhoto": "Tutup foto",
+      "pinch": "Cubit atau ketuk dua kali untuk memperbesar",
+      "alreadySaved": "Struk ini sudah pernah disimpan sebagai transaksi.",
+      "openHistory": "Lihat di Riwayat"
     }
   }
 }

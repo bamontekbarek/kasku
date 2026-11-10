@@ -2,7 +2,7 @@
   "name": "kasku",
   "version": "1.0.0",
   "private": true,
-  "description": "Kasku \u2014 catat pengeluaran lebih cepat, cukup foto struknya.",
+  "description": "Kasku — catat pengeluaran lebih cepat, cukup foto struknya.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -18,6 +18,7 @@
     "@supabase/supabase-js": "^2.119.0",
     "next": "^15.5.29",
     "next-intl": "^4.14.9",
+    "openai": "^7.55.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",

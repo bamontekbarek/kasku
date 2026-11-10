@@ -9,6 +9,7 @@ import { deleteExpense, saveExpense } from "@/app/actions/expenses";
 import { AmountField } from "@/components/expense-fields";
 import { FieldError, FormAlert } from "@/components/form";
 import { Icon } from "@/components/Icon";
+import { PhotoViewer } from "@/components/PhotoViewer";
 import { Button, Field, Footer, ScanBadge, Screen, TopBar, inputClass, selectClass } from "@/components/ui";
 import { PAYMENT_METHODS } from "@/lib/expenses/constants";
 import type { Category } from "@/lib/expenses/queries";
@@ -19,6 +20,7 @@ export type EditableExpense = {
   id: string;
   values: ExpenseInput;
   scanned: boolean;
+  photoUrl: string | null;
   /** "6 Nov 2026 · 19:42" */
   recordedAt: string;
 };
@@ -30,10 +32,12 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
   const t = useTranslations("expense");
   const tc = useTranslations("common");
   const tp = useTranslations("payment");
+  const ts = useTranslations("scan.review");
   const router = useRouter();
   const hasItems = (expense.values.items?.length ?? 0) > 0;
   const [itemsOpen, setItemsOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
+  const [photo, setPhoto] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -51,7 +55,7 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
   const itemsTotal = (itemValues ?? []).reduce((a, it) => a + (Number(it?.price) || 0), 0);
   const mismatch = hasItems && itemsTotal > 0 && itemsTotal !== amount;
 
-  const fail = (error: "invalid" | "notFound" | "generic") => setFailure(error === "notFound" ? t("notFound") : tc("genericError"));
+  const fail = (error: string) => setFailure(error === "notFound" ? t("notFound") : tc("genericError"));
 
   const onSubmit = handleSubmit(async (values) => {
     setFailure(null);
@@ -97,15 +101,27 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
       <form id="edit-expense" onSubmit={onSubmit} noValidate className="flex flex-col gap-[18px] px-4 pt-3 pb-6">
         {expense.scanned && (
           <div className="flex items-center gap-3 rounded-[14px] bg-surface p-3">
-            <span className="flex size-11 flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent">
-              <Icon name="receipt" size={22} />
-            </span>
+            {expense.photoUrl ? (
+              <button type="button" onClick={() => setPhoto(true)} aria-label={ts("viewPhoto")} className="h-[68px] w-12 flex-none overflow-hidden rounded-lg border-0 bg-bg p-0">
+                {/* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL */}
+                <img src={expense.photoUrl} alt="" className="size-full object-cover object-top" />
+              </button>
+            ) : (
+              <span className="flex size-11 flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent">
+                <Icon name="receipt" size={22} />
+              </span>
+            )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-1.5 text-sm font-semibold">
                 <ScanBadge />
                 {t("fromReceipt")}
               </div>
               <div className="mt-0.5 text-[13px] text-muted">{expense.recordedAt}</div>
+              {expense.photoUrl && (
+                <button type="button" onClick={() => setPhoto(true)} className="mt-0.5 border-0 bg-transparent p-0 text-[13px] font-semibold text-accent">
+                  {ts("viewPhoto")}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -236,6 +252,8 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
         </Field>
       </form>
 
+      {photo && expense.photoUrl && <PhotoViewer src={expense.photoUrl} onClose={() => setPhoto(false)} />}
+
       {confirm && (
         <div className="fixed inset-0 z-30 mx-auto max-w-[430px]">
           <div onClick={() => setConfirm(false)} className="absolute inset-0 bg-black/65" aria-hidden="true" />
@@ -250,7 +268,7 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
               {t("deleteTitle")}
             </h2>
             <p id="del-p" className="m-0 text-sm leading-5 text-fg-2">
-              {t.rich(hasItems ? "deleteBodyItems" : "deleteBody", {
+              {t.rich(expense.photoUrl ? "deleteBodyPhoto" : hasItems ? "deleteBodyItems" : "deleteBody", {
                 name,
                 amount: rp(expense.values.amount),
                 b: (c) => <span className="font-semibold text-fg">{c}</span>,

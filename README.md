@@ -12,12 +12,14 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 | M0 Fondasi | Supabase (`supabase/`), migrasi, lint/typecheck/test, CI + deploy otomatis | selesai |
 | M1 Akun | Register, login, verifikasi email, lupa/buat/ubah kata sandi, logout, ID/EN, legal, PWA | selesai |
 | M2 Pencatatan inti | Kategori, input manual, Riwayat (cari, filter, bulan, edit, hapus), Dashboard | selesai |
-| M3–M4 | Scan, anggaran, notifikasi, export: layar masih memakai data contoh (`src/lib/data.ts`) | belum |
+| M3 Scan struk AI | Kamera/galeri, cek kualitas + crop + kompres di browser, upload, API scan DeepSeek, kuota, Periksa Hasil Scan | selesai di kode, butuh `DEEPSEEK_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY` |
+| M4 | Anggaran, notifikasi, export: layar masih memakai data contoh (`src/lib/data.ts`) | belum |
 
 ## Setup (Supabase cloud, tanpa Docker)
 
-1. Salin `.env.example` ke `.env.local`, isi `NEXT_PUBLIC_SUPABASE_URL` dan `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   (Supabase → Project Settings → API).
+1. Salin `.env.example` ke `.env.local`, isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+   `SUPABASE_SERVICE_ROLE_KEY` (Supabase → Project Settings → API) dan `DEEPSEEK_API_KEY`.
+   Dua kunci terakhir hanya untuk server; isi juga di Vercel → Environment Variables (Production).
 2. Hubungkan CLI ke project dan jalankan migrasi:
 
    ```bash
@@ -59,6 +61,7 @@ src/
     (legal)/           syarat, privasi
     (app)/             dashboard, riwayat, tambah, scan, anggaran, akun …
     auth/confirm/      target link email (verifikasi + reset), verifyOtp(token_hash)
+    api/receipts/      upload foto struk + [id]/scan (kuota, DeepSeek, simpan hasil mentah)
     actions/           server action: bahasa, transaksi, kategori (RLS sebagai user yang login)
     offline/           halaman cadangan service worker
     pwa-icon/[size]/   ikon PNG untuk manifest
@@ -68,6 +71,9 @@ src/
     supabase/          client browser, server, middleware (refresh sesi + guard rute)
     auth/              helper auth, guard rute, data akun
     expenses/          skema Zod transaksi/kategori, query server, helper tanggal (zona waktu user), ringkasan
+    ai/                scanReceipt.ts (satu-satunya pemanggil DeepSeek), receipt.ts (skema + label Cek lagi)
+    image/             cek kualitas, deteksi kertas, crop, resize, grayscale, kompres (tanpa library)
+    scan/              kuota/env, client API scan, store foto antar layar
     validation/        skema Zod akun
   middleware.ts
 public/sw.js           service worker kecil tanpa library
@@ -91,7 +97,5 @@ supabase/
 | --- | --- |
 | Dashboard offline banner | `/dashboard?offline=1` |
 | Dashboard user baru | `/welcome` (otomatis di `/dashboard` selama belum ada transaksi) |
-| Kuota scan habis | `/add?quota=0` |
-| Foto buram / gelap | `/scan/crop?quality=blur`, `/scan/crop?quality=dark` |
-| Jenis error scan | `/scan/error?kind=notReceipt\|failed\|tooFast\|uploadFailed` |
+| Jenis error scan | `/scan/error?kind=notReceipt\|failed\|tooFast\|uploadFailed\|quota\|paused` |
 | Link reset kedaluwarsa | `/reset-password?expired=1` |

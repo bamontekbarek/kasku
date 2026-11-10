@@ -158,6 +158,13 @@ export type Database = {
             referencedRelation: "categories"
             referencedColumns: ["id", "user_id"]
           },
+          {
+            foreignKeyName: "expenses_receipt_fkey"
+            columns: ["receipt_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "receipts"
+            referencedColumns: ["id", "user_id"]
+          },
         ]
       }
       notification_settings: {
@@ -223,12 +230,117 @@ export type Database = {
         }
         Relationships: []
       }
+      receipts: {
+        Row: {
+          ai_model: string | null
+          ai_result: Json | null
+          cached_tokens: number | null
+          completion_tokens: number | null
+          created_at: string
+          error: string | null
+          id: string
+          image_bytes: number
+          image_hash: string
+          image_height: number | null
+          image_width: number | null
+          prompt_tokens: number | null
+          scanned_at: string | null
+          status: Database["public"]["Enums"]["receipt_status"]
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string | null
+          ai_result?: Json | null
+          cached_tokens?: number | null
+          completion_tokens?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_bytes: number
+          image_hash: string
+          image_height?: number | null
+          image_width?: number | null
+          prompt_tokens?: number | null
+          scanned_at?: string | null
+          status?: Database["public"]["Enums"]["receipt_status"]
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_model?: string | null
+          ai_result?: Json | null
+          cached_tokens?: number | null
+          completion_tokens?: number | null
+          created_at?: string
+          error?: string | null
+          id?: string
+          image_bytes?: number
+          image_hash?: string
+          image_height?: number | null
+          image_width?: number | null
+          prompt_tokens?: number | null
+          scanned_at?: string | null
+          status?: Database["public"]["Enums"]["receipt_status"]
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scan_ip_usage: {
+        Row: { count: number; hour: string; ip: string }
+        Insert: { count?: number; hour: string; ip: string }
+        Update: { count?: number; hour?: string; ip?: string }
+        Relationships: []
+      }
+      scan_usage: {
+        Row: {
+          count: number
+          day: string
+          in_progress: boolean
+          last_scan_at: string | null
+          minute_count: number
+          minute_started_at: string | null
+          user_id: string
+        }
+        Insert: {
+          count?: number
+          day: string
+          in_progress?: boolean
+          last_scan_at?: string | null
+          minute_count?: number
+          minute_started_at?: string | null
+          user_id: string
+        }
+        Update: {
+          count?: number
+          day?: string
+          in_progress?: boolean
+          last_scan_at?: string | null
+          minute_count?: number
+          minute_started_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      ai_usage_since: {
+        Args: { p_since: string }
+        Returns: { cached_tokens: number; completion_tokens: number; prompt_tokens: number }[]
+      }
+      consume_scan_quota: {
+        Args: { p_daily: number; p_ip: string | null; p_ip_hourly: number; p_per_minute: number; p_user: string }
+        Returns: Json
+      }
       delete_category: { Args: { p_id: string }; Returns: undefined }
+      finish_scan: { Args: { p_refund: boolean; p_user: string }; Returns: undefined }
       get_category_totals: {
         Args: { p_month?: string }
         Returns: {
@@ -253,6 +365,7 @@ export type Database = {
           p_merchant: string
           p_note: string
           p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_receipt_id?: string | null
           p_source?: Database["public"]["Enums"]["expense_source"]
           p_spent_at: string
         }
@@ -262,6 +375,7 @@ export type Database = {
     Enums: {
       expense_source: "manual" | "scan"
       payment_method: "cash" | "debit" | "qris" | "credit_card" | "ewallet"
+      receipt_status: "uploaded" | "processing" | "done" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -394,6 +508,7 @@ export const Constants = {
     Enums: {
       expense_source: ["manual", "scan"],
       payment_method: ["cash", "debit", "qris", "credit_card", "ewallet"],
+      receipt_status: ["uploaded", "processing", "done", "failed"],
     },
   },
 } as const
