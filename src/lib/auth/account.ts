@@ -1,9 +1,10 @@
 import "server-only";
 import { redirect } from "next/navigation";
 import { cache } from "react";
+import { DEFAULT_TIME_ZONE } from "@/lib/expenses/dates";
 import { createClient } from "@/lib/supabase/server";
 
-export type Account = { id: string; email: string; fullName: string; initials: string; verified: boolean };
+export type Account = { id: string; email: string; fullName: string; initials: string; verified: boolean; timeZone: string };
 
 export function initialsOf(name: string, email: string): string {
   const words = name.trim().split(/\s+/).filter(Boolean);
@@ -22,7 +23,7 @@ export const getAccount = cache(async (): Promise<Account> => {
   } = await supabase.auth.getUser();
   if (!user || !user.email) redirect("/login");
 
-  const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+  const { data: profile } = await supabase.from("profiles").select("full_name, timezone").eq("id", user.id).single();
   const fullName = profile?.full_name || (user.user_metadata?.full_name as string | undefined) || "";
   return {
     id: user.id,
@@ -30,5 +31,6 @@ export const getAccount = cache(async (): Promise<Account> => {
     fullName,
     initials: initialsOf(fullName, user.email),
     verified: Boolean(user.email_confirmed_at),
+    timeZone: profile?.timezone || DEFAULT_TIME_ZONE,
   };
 });

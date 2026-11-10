@@ -49,3 +49,31 @@ jobs:
             assert (select is_system from public.categories where user_id = '00000000-0000-0000-0000-000000000001' and name = 'Lainnya'), 'Lainnya = sistem';
           end $$;
           SQL
+      - name: Uji transaksi, ringkasan, dan hapus kategori (M2)
+        run: |
+          psql "postgresql://postgres:postgres@127.0.0.1:54322/postgres" -v ON_ERROR_STOP=1 <<'SQL'
+          begin;
+          select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000001","role":"authenticated"}', true);
+          set local role authenticated;
+          do $$
+          declare
+            food uuid := (select id from public.categories where name = 'Makanan & Minuman');
+            other uuid := (select id from public.categories where is_system);
+            e uuid;
+            s jsonb;
+          begin
+            e := public.save_expense(null, 50000, 'Makan siang', now(), food, 'qris', '', 'scan', '[{"name":"Nasi","price":50000}]');
+            assert (select count(*) from public.expense_items where expense_id = e) = 1, 'item tersimpan';
+            s := public.get_period_summary('day');
+            assert (s->>'total')::bigint = 50000, 'total hari ini';
+            assert jsonb_array_length(s->'series') = 7, 'deret 7 hari';
+            perform public.delete_category(food);
+            assert (select category_id from public.expenses where id = e) = other, 'pindah ke Lainnya';
+            begin
+              perform public.delete_category(other);
+              raise exception 'Lainnya seharusnya tidak bisa dihapus';
+            exception when sqlstate '42501' then null;
+            end;
+          end $$;
+          rollback;
+          SQL

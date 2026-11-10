@@ -72,6 +72,94 @@ export type Database = {
         }
         Relationships: []
       }
+      expense_items: {
+        Row: {
+          expense_id: string
+          id: string
+          name: string
+          position: number
+          price: number
+          user_id: string
+        }
+        Insert: {
+          expense_id: string
+          id?: string
+          name: string
+          position?: number
+          price?: number
+          user_id?: string
+        }
+        Update: {
+          expense_id?: string
+          id?: string
+          name?: string
+          position?: number
+          price?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_items_expense_id_user_id_fkey"
+            columns: ["expense_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "expenses"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          amount: number
+          category_id: string
+          created_at: string
+          id: string
+          merchant: string
+          note: string
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          receipt_id: string | null
+          source: Database["public"]["Enums"]["expense_source"]
+          spent_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id: string
+          created_at?: string
+          id?: string
+          merchant?: string
+          note?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          receipt_id?: string | null
+          source?: Database["public"]["Enums"]["expense_source"]
+          spent_at: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string
+          created_at?: string
+          id?: string
+          merchant?: string
+          note?: string
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          receipt_id?: string | null
+          source?: Database["public"]["Enums"]["expense_source"]
+          spent_at?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_user_id_fkey"
+            columns: ["category_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       notification_settings: {
         Row: {
           budget_near: boolean
@@ -140,10 +228,40 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_category: { Args: { p_id: string }; Returns: undefined }
+      get_category_totals: {
+        Args: { p_month?: string }
+        Returns: {
+          category_id: string
+          color: string
+          is_system: boolean
+          name: string
+          total: number
+          tx_count: number
+        }[]
+      }
+      get_period_summary: {
+        Args: { p_anchor?: string; p_period: string }
+        Returns: Json
+      }
+      save_expense: {
+        Args: {
+          p_amount: number
+          p_category_id: string
+          p_id: string | null
+          p_items?: Json | null
+          p_merchant: string
+          p_note: string
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_source?: Database["public"]["Enums"]["expense_source"]
+          p_spent_at: string
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      expense_source: "manual" | "scan"
+      payment_method: "cash" | "debit" | "qris" | "credit_card" | "ewallet"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -273,6 +391,9 @@ export const Constants = {
     Enums: {},
   },
   public: {
-    Enums: {},
+    Enums: {
+      expense_source: ["manual", "scan"],
+      payment_method: ["cash", "debit", "qris", "credit_card", "ewallet"],
+    },
   },
 } as const

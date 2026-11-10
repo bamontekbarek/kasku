@@ -9,9 +9,10 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 
 | Milestone | Isi | Status |
 | --- | --- | --- |
-| M0 Fondasi | Supabase (`supabase/`), migrasi pertama, lint/typecheck/test, CI + deploy workflow | selesai di kode, perlu project Supabase + Vercel + GitHub |
-| M1 Akun | Register, login, verifikasi email, lupa/buat/ubah kata sandi, logout, ID/EN, legal, PWA | selesai di kode |
-| M2–M4 | Layar sudah ada tapi masih memakai data contoh (`src/lib/data.ts`) | belum |
+| M0 Fondasi | Supabase (`supabase/`), migrasi, lint/typecheck/test, CI + deploy otomatis | selesai |
+| M1 Akun | Register, login, verifikasi email, lupa/buat/ubah kata sandi, logout, ID/EN, legal, PWA | selesai |
+| M2 Pencatatan inti | Kategori, input manual, Riwayat (cari, filter, bulan, edit, hapus), Dashboard | selesai |
+| M3–M4 | Scan, anggaran, notifikasi, export: layar masih memakai data contoh (`src/lib/data.ts`) | belum |
 
 ## Setup (Supabase cloud, tanpa Docker)
 
@@ -58,7 +59,7 @@ src/
     (legal)/           syarat, privasi
     (app)/             dashboard, riwayat, tambah, scan, anggaran, akun …
     auth/confirm/      target link email (verifikasi + reset), verifyOtp(token_hash)
-    actions/locale.ts  ganti bahasa → cookie NEXT_LOCALE + profiles.locale
+    actions/           server action: bahasa, transaksi, kategori (RLS sebagai user yang login)
     offline/           halaman cadangan service worker
     pwa-icon/[size]/   ikon PNG untuk manifest
   components/          ui, form (TextField, PasswordField, …), PasswordRules, …
@@ -66,7 +67,8 @@ src/
   lib/
     supabase/          client browser, server, middleware (refresh sesi + guard rute)
     auth/              helper auth, guard rute, data akun
-    validation/        skema Zod (dipakai form; nanti juga untuk JSON AI)
+    expenses/          skema Zod transaksi/kategori, query server, helper tanggal (zona waktu user), ringkasan
+    validation/        skema Zod akun
   middleware.ts
 public/sw.js           service worker kecil tanpa library
 supabase/
@@ -88,7 +90,7 @@ supabase/
 | Layar | URL |
 | --- | --- |
 | Dashboard offline banner | `/dashboard?offline=1` |
-| Dashboard user baru | `/welcome` |
+| Dashboard user baru | `/welcome` (otomatis di `/dashboard` selama belum ada transaksi) |
 | Kuota scan habis | `/add?quota=0` |
 | Foto buram / gelap | `/scan/crop?quality=blur`, `/scan/crop?quality=dark` |
 | Jenis error scan | `/scan/error?kind=notReceipt\|failed\|tooFast\|uploadFailed` |

@@ -1,36 +1,41 @@
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { categories, scannedReceipt, transactionDays } from "@/lib/data";
+import { getAccount } from "@/lib/auth/account";
+import { localParts } from "@/lib/expenses/dates";
+import { getCategories, getExpense } from "@/lib/expenses/queries";
+import { shortDate } from "@/lib/expenses/summary";
 import { EditExpenseForm } from "./EditExpenseForm";
 
-export const metadata: Metadata = { title: "Edit Pengeluaran" };
+export async function generateMetadata(): Promise<Metadata> {
+  return { title: (await getTranslations("meta"))("editExpense") };
+}
 
 export default async function EditExpensePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const tx = transactionDays.flatMap((d) => d.rows).find((r) => r.id === id);
-  if (!tx) notFound();
+  const [account, expense, categories, locale, t] = await Promise.all([getAccount(), getExpense(id), getCategories(), getLocale(), getTranslations("expense")]);
+  if (!expense) notFound();
 
-  const day = transactionDays.find((d) => d.rows.includes(tx))!;
-  const date = ["2026-11-06", "2026-11-05", "2026-11-04"][transactionDays.indexOf(day)];
-  const category = categories.find((c) => c.short === tx.category)?.name ?? "Lainnya";
-  // Only the scanned demo receipt carries per-item prices in the mock data.
-  const items =
-    tx.id === "t1"
-      ? scannedReceipt.items.map((it) => ({ name: it.name, price: it.price }))
-      : tx.items.map((name) => ({ name, price: 0 }));
+  const spent = localParts(expense.spentAt, account.timeZone);
+  const recorded = localParts(expense.createdAt, account.timeZone);
 
   return (
     <EditExpenseForm
-      tx={{
-        name: tx.name,
-        amount: tx.amount,
-        date,
-        time: tx.time,
-        category,
-        payment: tx.payment,
-        scanned: tx.scanned,
-        recordedAt: `Dicatat ${day.day.replace("Hari ini · ", "")} 2026 · ${tx.time}`,
-        items,
+      categories={categories}
+      expense={{
+        id: expense.id,
+        scanned: expense.source === "scan",
+        recordedAt: t("recordedAt", { date: shortDate(recorded.date, locale), time: recorded.time }),
+        values: {
+          amount: expense.amount,
+          merchant: expense.merchant,
+          date: spent.date,
+          time: spent.time,
+          categoryId: expense.categoryId,
+          paymentMethod: expense.payment,
+          note: expense.note,
+          items: expense.items,
+        },
       }}
     />
   );
