@@ -1,13 +1,13 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import type { ReactNode } from "react";
 import { Icon } from "@/components/Icon";
 
 /** Long-form legal page: sticky title bar, back returns to wherever it was opened from. */
 export function LegalLayout({ kind, children }: { kind: "terms" | "privacy"; children: ReactNode }) {
-  const router = useRouter();
+  const router = useAppRouter();
   const t = useTranslations("legal");
   const tm = useTranslations("meta");
   const tc = useTranslations("common");

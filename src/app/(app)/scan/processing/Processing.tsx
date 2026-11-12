@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { ButtonLink, TopBar } from "@/components/ui";
@@ -14,7 +14,7 @@ const STEPS = ["step1", "step2", "step3", "step4"] as const;
 /** SCAN-03: upload → AI reads → build data → fill form, with "Batal, isi manual". */
 export function Processing() {
   const t = useTranslations("scan.processing");
-  const router = useRouter();
+  const router = useAppRouter();
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);

@@ -1,13 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { Icon } from "@/components/Icon";
 import { pillClass } from "@/components/ui";
 import { cx } from "@/lib/format";
 
 /** Month picker pill: a native <select> laid over the pill, navigating to `${path}?month=…`. */
 export function MonthPill({ path, month, months, label }: { path: string; month: string; months: Array<{ value: string; label: string }>; label: string }) {
-  const router = useRouter();
+  const router = useAppRouter();
   return (
     <label className={cx(pillClass, "relative")}>
       <Icon name="calendar" size={16} className="text-muted" />

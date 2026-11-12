@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { deleteExpense, saveExpense } from "@/app/actions/expenses";
@@ -33,13 +33,14 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
   const tc = useTranslations("common");
   const tp = useTranslations("payment");
   const ts = useTranslations("scan.review");
-  const router = useRouter();
+  const router = useAppRouter();
   const hasItems = (expense.values.items?.length ?? 0) > 0;
   const [itemsOpen, setItemsOpen] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [photo, setPhoto] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  const [leaving, setLeaving] = useState(false);
 
   const {
     register,
@@ -61,14 +62,15 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
     setFailure(null);
     const result = await saveExpense(expense.id, { ...values, items: hasItems ? values.items : null });
     if (!result.ok) return fail(result.error);
+    setLeaving(true);
     router.push("/transactions");
   });
 
   const onDelete = async () => {
     setDeleting(true);
     const result = await deleteExpense(expense.id);
-    setDeleting(false);
     if (!result.ok && result.error !== "notFound") {
+      setDeleting(false);
       setConfirm(false);
       return fail(result.error);
     }
@@ -92,8 +94,8 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
       }
       footer={
         <Footer>
-          <Button type="submit" form="edit-expense" disabled={isSubmitting}>
-            {isSubmitting ? tc("saving") : t("saveChanges")}
+          <Button type="submit" form="edit-expense" loading={isSubmitting || leaving} disabled={deleting}>
+            {isSubmitting || leaving ? tc("saving") : t("saveChanges")}
           </Button>
         </Footer>
       }
@@ -275,10 +277,10 @@ export function EditExpenseForm({ expense, categories }: { expense: EditableExpe
               })}
             </p>
             <div className="mt-1 grid grid-cols-2 gap-2.5">
-              <Button variant="secondary" size="sm" onClick={() => setConfirm(false)} autoFocus>
+              <Button variant="secondary" size="sm" onClick={() => setConfirm(false)} disabled={deleting} autoFocus>
                 {tc("cancel")}
               </Button>
-              <Button variant="danger" size="sm" onClick={onDelete} disabled={deleting}>
+              <Button variant="danger" size="sm" onClick={onDelete} loading={deleting}>
                 {deleting ? t("deleting") : t("confirmDelete")}
               </Button>
             </div>

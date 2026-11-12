@@ -101,7 +101,7 @@ export function NewPasswordForm({ expired, email }: { expired: boolean; email: s
               error={errors.confirm?.message}
               {...register("confirm")}
             />
-            <Button type="submit" disabled={!isValid || isSubmitting} aria-busy={isSubmitting}>
+            <Button type="submit" disabled={!isValid} loading={isSubmitting}>
               {isSubmitting ? tc("saving") : t("cta")}
             </Button>
           </form>

@@ -40,7 +40,7 @@ export function ResendButton({
     <Button
       variant="secondary"
       size={size}
-      disabled={busy}
+      loading={busy}
       onClick={async () => {
         setBusy(true);
         const ok = await onResend();

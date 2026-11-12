@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
 import { Icon } from "@/components/Icon";
 import { Button, ButtonLink } from "@/components/ui";
@@ -31,7 +31,7 @@ const cornerPos = (box: Box, c: Corner) => ({ x: c === "tl" || c === "bl" ? box.
 /** SCAN-02 / PRD 7.1: quality check, automatic crop with movable corners, rotate, then optimise. */
 export function CropView() {
   const t = useTranslations("scan.crop");
-  const router = useRouter();
+  const router = useAppRouter();
   const previewRef = useRef<HTMLCanvasElement>(null);
   const frameRef = useRef<HTMLDivElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -191,7 +191,7 @@ export function CropView() {
         {warn ? (
           <div className="grid grid-cols-[2fr_1fr] gap-2.5">
             <ButtonLink href="/scan">{t("retake")}</ButtonLink>
-            <Button variant="surface" className="text-sm" onClick={use} disabled={phase !== "ready"}>
+            <Button variant="surface" className="text-sm" onClick={use} loading={phase === "working"} disabled={phase !== "ready" && phase !== "working"}>
               {t("useAnyway")}
             </Button>
           </div>
@@ -200,7 +200,7 @@ export function CropView() {
             <ButtonLink href="/scan" variant="surface" className="text-[15px]">
               {t("retake")}
             </ButtonLink>
-            <Button onClick={use} disabled={phase !== "ready"}>
+            <Button onClick={use} loading={phase === "working"} disabled={phase !== "ready" && phase !== "working"}>
               {phase === "working" ? t("preparing") : t("use")}
             </Button>
           </div>

@@ -239,7 +239,7 @@ export function ExportSheet({
                   ? t("summary", { label, count: summary.count, total: rp(summary.total) })
                   : t("counting")}
           </p>
-          <Button onClick={run} disabled={!range || busy || summary?.count === 0}>
+          <Button onClick={run} loading={busy} disabled={!range || summary?.count === 0}>
             {busy ? t("preparing") : summary?.count === 0 ? t("nothing") : t("export")}
           </Button>
         </>

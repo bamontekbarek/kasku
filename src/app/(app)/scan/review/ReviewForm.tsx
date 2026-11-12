@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState, type ReactNode } from "react";
 import { saveScannedExpense } from "@/app/actions/expenses";
 import { FieldError, FormAlert } from "@/components/form";
@@ -68,7 +68,7 @@ export function ReviewForm({
   const te = useTranslations("expense");
   const tp = useTranslations("payment");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
 
   const [v, setV] = useState<Values>({
     amount: result.amount.value,
@@ -135,7 +135,7 @@ export function ReviewForm({
           <ButtonLink href="/scan" variant="surface" className="text-[15px]" onClick={() => scanStore.clear()}>
             {t("rescan")}
           </ButtonLink>
-          <Button onClick={save} disabled={saving || Boolean(savedExpenseId)}>
+          <Button onClick={save} loading={saving} disabled={Boolean(savedExpenseId)}>
             {saving ? tc("saving") : t("save")}
           </Button>
         </Footer>

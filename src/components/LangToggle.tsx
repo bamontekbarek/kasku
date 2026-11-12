@@ -13,6 +13,7 @@ export function LangToggle() {
       type="button"
       aria-pressed={lang === value}
       disabled={pending}
+      aria-busy={(pending && lang !== value) || undefined}
       onClick={() => setLang(value)}
       className={cx(
         "min-h-11 min-w-11 rounded-full border-0 px-3 text-[13px] font-semibold",

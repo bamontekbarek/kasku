@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@/components/Icon";
 import { captureFrame } from "@/lib/image/browser";
@@ -20,7 +20,7 @@ type TorchTrack = Omit<MediaStreamTrack, "getCapabilities"> & { getCapabilities?
  */
 export function CameraView() {
   const t = useTranslations("scan.camera");
-  const router = useRouter();
+  const router = useAppRouter();
   const pick = usePickPhoto();
   const videoRef = useRef<HTMLVideoElement>(null);
   const trackRef = useRef<TorchTrack | null>(null);

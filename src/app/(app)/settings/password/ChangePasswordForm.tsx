@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FormAlert, PasswordField, StrengthBar } from "@/components/form";
@@ -16,7 +16,9 @@ import { changePasswordSchema, checkPassword, type ChangePasswordInput } from "@
 export function ChangePasswordForm({ email }: { email: string }) {
   const t = useTranslations("changePassword");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
+  // Done and navigating away: keep the button locked until the next page shows.
+  const [leaving, setLeaving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
   const {
     register,
@@ -52,6 +54,7 @@ export function ChangePasswordForm({ email }: { email: string }) {
       return;
     }
     await supabase.auth.signOut({ scope: "others" });
+    setLeaving(true);
     router.replace("/settings?password=changed");
     router.refresh();
   });
@@ -62,8 +65,8 @@ export function ChangePasswordForm({ email }: { email: string }) {
       footer={
         <Footer className="flex flex-col gap-2.5">
           <p className="m-0 text-center text-xs text-muted">{t("note")}</p>
-          <Button type="submit" form="change-password" disabled={!isValid || isSubmitting} aria-busy={isSubmitting}>
-            {isSubmitting ? tc("saving") : t("cta")}
+          <Button type="submit" form="change-password" disabled={!isValid} loading={isSubmitting || leaving}>
+            {isSubmitting || leaving ? tc("saving") : t("cta")}
           </Button>
         </Footer>
       }

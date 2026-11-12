@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FieldError, FormAlert, PasswordField, TextField } from "@/components/form";
@@ -26,7 +26,9 @@ export function RegisterForm() {
   const tc = useTranslations("common");
   const tp = useTranslations("password");
   const locale = useLocale();
-  const router = useRouter();
+  const router = useAppRouter();
+  // Done and navigating away: keep the button locked until the next page shows.
+  const [leaving, setLeaving] = useState(false);
   const [failure, setFailure] = useState<"rateLimited" | "generic" | null>(null);
   const {
     register,
@@ -55,6 +57,7 @@ export function RegisterForm() {
       setFailure(classifyAuthError(error) === "rateLimited" ? "rateLimited" : "generic");
       return;
     }
+    setLeaving(true);
     router.push(`/verify-email?email=${encodeURIComponent(email)}`);
   });
 
@@ -168,8 +171,8 @@ export function RegisterForm() {
           </label>
           <FieldError id="reg-terms-error" message={errors.agree?.message} />
         </div>
-        <Button type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
-          {isSubmitting ? t("loading") : t("cta")}
+        <Button type="submit" loading={isSubmitting || leaving}>
+          {isSubmitting || leaving ? t("loading") : t("cta")}
         </Button>
         <p className="m-0 -mt-1 text-center text-[13px] leading-[18px] text-muted">{t("hint")}</p>
       </form>

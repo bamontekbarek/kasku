@@ -6,7 +6,7 @@ import { createCategory, deleteCategory, updateCategory, type CategoryResult } f
 import { FieldError, FormAlert } from "@/components/form";
 import { Icon } from "@/components/Icon";
 import { Sheet, SheetHeader } from "@/components/Sheet";
-import { Badge, Button, ChevronRight, Dot, TopBar, labelClass } from "@/components/ui";
+import { Badge, Button, ChevronRight, Dot, TopBar, labelClass, Spinner } from "@/components/ui";
 import { CATEGORY_COLORS } from "@/lib/expenses/constants";
 import type { CategoryTotal } from "@/lib/expenses/queries";
 import { categorySchema } from "@/lib/expenses/schema";
@@ -174,8 +174,10 @@ export function CategoriesManager({ categories }: { categories: CategoryTotal[] 
                 type="button"
                 onClick={remove}
                 disabled={busy}
-                className={cx("h-11 rounded-[10px] border-0 text-[15px] font-semibold", confirmDelete ? "bg-danger text-accent-ink" : "bg-danger-soft text-danger")}
+                aria-busy={(busy && confirmDelete) || undefined}
+                className={cx("flex h-11 items-center justify-center gap-2 rounded-[10px] border-0 text-[15px] font-semibold", confirmDelete ? "bg-danger text-accent-ink" : "bg-danger-soft text-danger")}
               >
+                {busy && confirmDelete && <Spinner />}
                 {confirmDelete ? t("deleteConfirm") : t("delete")}
               </button>
               <span className="text-center text-xs text-muted" role={confirmDelete ? "status" : undefined}>
@@ -184,7 +186,7 @@ export function CategoriesManager({ categories }: { categories: CategoryTotal[] 
             </div>
           )}
 
-          <Button onClick={save} disabled={busy || !check?.success}>
+          <Button onClick={save} loading={busy && !confirmDelete} disabled={!check?.success || busy}>
             {busy ? tc("saving") : editing.id ? t("save") : t("add")}
           </Button>
         </Sheet>

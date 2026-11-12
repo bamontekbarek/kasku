@@ -2,7 +2,7 @@
 
 import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useMemo, useState, type ReactNode } from "react";
 import { TabScreen } from "@/components/BottomNav";
 import { Icon } from "@/components/Icon";
@@ -37,7 +37,7 @@ export function Transactions({ month, filter: initialFilter, months, today, yest
   const t = useTranslations("history");
   const tp = useTranslations("payment");
   const locale = useLocale();
-  const router = useRouter();
+  const router = useAppRouter();
   const [filter, setFilter] = useState<string>(initialFilter);
   const [query, setQuery] = useState("");
   const q = query.trim().toLocaleLowerCase();

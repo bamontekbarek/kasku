@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState, useTransition } from "react";
 import { saveBudget } from "@/app/actions/budget";
 import { Icon } from "@/components/Icon";
@@ -32,7 +32,7 @@ export function SetBudgetForm({
   const t = useTranslations("budgetEdit");
   const tv = useTranslations("validation");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
   const back = `/budget?month=${month}`;
   const [total, setTotal] = useState(initialTotal ?? 0);
   const [vals, setVals] = useState(categories.map((c) => c.limit));
@@ -40,6 +40,7 @@ export function SetBudgetForm({
   const [error, setError] = useState<string | null>(null);
   const [totalError, setTotalError] = useState(false);
   const [pending, start] = useTransition();
+  const [leaving, setLeaving] = useState(false);
 
   const diff = unallocated(total, vals);
 
@@ -57,7 +58,10 @@ export function SetBudgetForm({
         remind,
         categories: categories.map((c, i) => ({ categoryId: c.id, amount: vals[i] ?? 0 })),
       });
-      if (res.ok) router.push(back);
+      if (res.ok) {
+        setLeaving(true);
+        router.push(back);
+      }
       else setError(tc("genericError"));
     });
   };
@@ -67,8 +71,8 @@ export function SetBudgetForm({
       header={<TopBar title={t("title")} back={back} />}
       footer={
         <Footer>
-          <Button onClick={submit} disabled={pending}>
-            {pending ? tc("saving") : t("save")}
+          <Button onClick={submit} loading={pending || leaving}>
+            {pending || leaving ? tc("saving") : t("save")}
           </Button>
         </Footer>
       }

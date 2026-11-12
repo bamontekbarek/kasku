@@ -2,12 +2,12 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState, type ReactNode } from "react";
 import { TabScreen } from "@/components/BottomNav";
 import { FormAlert } from "@/components/form";
 import { Icon, type IconName } from "@/components/Icon";
-import { Avatar, Badge, ChevronRight, SectionLabel, Segmented, buttonClass } from "@/components/ui";
+import { Avatar, Badge, ChevronRight, SectionLabel, Segmented, buttonClass, Spinner } from "@/components/ui";
 import type { Account } from "@/lib/auth/account";
 import { getSupabase } from "@/lib/auth/client";
 import { useLang } from "@/lib/i18n";
@@ -39,7 +39,7 @@ export function Settings({ account, overlay, notice }: { account: Account; overl
   const t = useTranslations("account");
   const tc = useTranslations("changePassword");
   const { lang, setLang, pending } = useLang();
-  const router = useRouter();
+  const router = useAppRouter();
   const [loggingOut, setLoggingOut] = useState(false);
 
   const logout = async () => {
@@ -125,8 +125,10 @@ export function Settings({ account, overlay, notice }: { account: Account; overl
           type="button"
           onClick={logout}
           disabled={loggingOut}
+          aria-busy={loggingOut || undefined}
           className={buttonClass("surface", "lg", "h-[50px] text-[15px] !text-danger")}
         >
+          {loggingOut && <Spinner />}
           {loggingOut ? t("loggingOut") : t("logout")}
         </button>
         <Link href="/settings/delete-account" className="-mt-2 self-center px-3 py-3 text-[13px] text-muted no-underline hover:text-fg-2">

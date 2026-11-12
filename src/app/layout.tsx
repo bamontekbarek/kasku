@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import localFont from "next/font/local";
+import { NavProgress } from "@/components/NavProgress";
 import { ServiceWorker } from "@/components/ServiceWorker";
 import "./globals.css";
 
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang={locale} className={plex.variable}>
       <body>
         <NextIntlClientProvider>
+          <NavProgress />
           {/* Forced mobile view at every screen size: one centered column, plain dark outside. */}
           <div className="app-shell relative mx-auto min-h-dvh max-w-[430px] border-x border-surface bg-bg">{children}</div>
         </NextIntlClientProvider>

@@ -33,11 +33,32 @@ export function buttonClass(variant: Variant = "primary", size: Size = "lg", ext
   );
 }
 
-type ButtonProps = ComponentProps<"button"> & { variant?: Variant; size?: Size };
+type ButtonProps = ComponentProps<"button"> & {
+  variant?: Variant;
+  size?: Size;
+  /** Waiting on the network: shows a spinner, keeps the button's colour, blocks repeat taps. */
+  loading?: boolean;
+};
 
-export function Button({ variant = "primary", size = "lg", className, type = "button", ...rest }: ButtonProps) {
-  const v = rest.disabled ? "disabled" : variant;
-  return <button type={type} className={buttonClass(v, size, className)} {...rest} />;
+/** Small spinning ring in the current text colour. */
+export function Spinner({ size = 18, className }: { size?: number; className?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      className={cx("inline-block flex-none animate-kspin rounded-full border-2 border-current border-r-transparent", className)}
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+export function Button({ variant = "primary", size = "lg", className, type = "button", loading = false, disabled, children, ...rest }: ButtonProps) {
+  const v = disabled && !loading ? "disabled" : variant;
+  return (
+    <button type={type} className={buttonClass(v, size, className)} disabled={disabled || loading} aria-busy={loading || undefined} {...rest}>
+      {loading && <Spinner />}
+      {children}
+    </button>
+  );
 }
 
 type ButtonLinkProps = ComponentProps<typeof Link> & { variant?: Variant; size?: Size };

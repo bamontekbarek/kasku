@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { syncLocaleFromProfile } from "@/app/actions/locale";
@@ -19,7 +19,9 @@ export type LoginNotice = "verifyFailed" | "passwordChanged" | "invalidCredentia
 export function LoginForm({ next, notice }: { next: string; notice: LoginNotice | null }) {
   const t = useTranslations("login");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
+  // Done and navigating away: keep the button locked until the next page shows.
+  const [leaving, setLeaving] = useState(false);
   const [failure, setFailure] = useState<AuthFailure | null>(notice === "invalidCredentials" ? "invalidCredentials" : null);
   const {
     register,
@@ -37,6 +39,7 @@ export function LoginForm({ next, notice }: { next: string; notice: LoginNotice 
       return;
     }
     await syncLocaleFromProfile();
+    setLeaving(true);
     router.replace(next);
     router.refresh();
   });
@@ -109,8 +112,8 @@ export function LoginForm({ next, notice }: { next: string; notice: LoginNotice 
             {t("forgot")}
           </Link>
         </div>
-        <Button type="submit" className="mt-1" disabled={isSubmitting} aria-busy={isSubmitting}>
-          {isSubmitting ? t("loading") : t("cta")}
+        <Button type="submit" className="mt-1" loading={isSubmitting || leaving}>
+          {isSubmitting || leaving ? t("loading") : t("cta")}
         </Button>
       </form>
     </AuthScreen>

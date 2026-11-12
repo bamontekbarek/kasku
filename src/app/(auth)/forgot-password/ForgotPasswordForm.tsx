@@ -3,7 +3,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useAppRouter } from "@/components/NavProgress";
 import { useForm } from "react-hook-form";
 import { TextField } from "@/components/form";
 import { Icon } from "@/components/Icon";
@@ -16,7 +17,9 @@ import { AuthScreen } from "../AuthScreen";
 export function ForgotPasswordForm({ defaultEmail }: { defaultEmail: string }) {
   const t = useTranslations("forgot");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
+  // Done and navigating away: keep the button locked until the next page shows.
+  const [leaving, setLeaving] = useState(false);
   const {
     register,
     handleSubmit,
@@ -26,6 +29,7 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail: string }) {
   const onSubmit = handleSubmit(async ({ email }) => {
     // The result is deliberately not shown: unknown and known emails look the same.
     await sendPasswordReset(email);
+    setLeaving(true);
     router.push(`/forgot-password/sent?email=${encodeURIComponent(email)}`);
   });
 
@@ -64,8 +68,8 @@ export function ForgotPasswordForm({ defaultEmail }: { defaultEmail: string }) {
           error={errors.email?.message}
           {...register("email")}
         />
-        <Button type="submit" disabled={isSubmitting} aria-busy={isSubmitting}>
-          {isSubmitting ? tc("sending") : t("cta")}
+        <Button type="submit" loading={isSubmitting || leaving}>
+          {isSubmitting || leaving ? tc("sending") : t("cta")}
         </Button>
       </form>
     </AuthScreen>

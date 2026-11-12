@@ -101,3 +101,67 @@
 @utility pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom), 24px);
 }
+
+/*
+ * Tap feedback for everything tappable: a quick press (scale + dim) so a tap is acknowledged
+ * at once, even when the next screen still has to come from the server on a weak signal.
+ * `touch-action: manipulation` removes the 300 ms double-tap delay on mobile browsers.
+ */
+@layer base {
+  :where(a[href], button, [role="button"], [role="switch"], summary, label:has(> select), input[type="checkbox"], input[type="radio"]) {
+    touch-action: manipulation;
+    transition:
+      transform 120ms ease,
+      opacity 120ms ease,
+      background-color 150ms ease;
+  }
+  :where(a[href], button:not(:disabled), [role="button"]:not([aria-disabled="true"]), [role="switch"], summary, label:has(> select)):active {
+    transform: scale(0.97);
+    opacity: 0.8;
+  }
+  /* Something is loading for this element (link being opened, button waiting on the network). */
+  :where(a, button)[aria-busy="true"] {
+    cursor: progress;
+    pointer-events: none;
+  }
+  a[aria-busy="true"] {
+    opacity: 0.6;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    :where(a[href], button, [role="button"], [role="switch"], summary, label:has(> select)):active {
+      transform: none;
+    }
+  }
+}
+
+/* Top bar shown while a new screen is loading (NavProgress). */
+@keyframes knav {
+  0% { transform: scaleX(0); }
+  20% { transform: scaleX(0.35); }
+  60% { transform: scaleX(0.7); }
+  100% { transform: scaleX(0.9); }
+}
+@keyframes knav-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.nav-progress {
+  transform-origin: left center;
+  animation:
+    knav 8s cubic-bezier(0.1, 0.6, 0.2, 1) forwards,
+    knav-pulse 1.2s ease-in-out infinite;
+}
+.nav-progress[data-done="true"] {
+  animation: none;
+  transform: scaleX(1);
+  opacity: 0;
+  transition:
+    transform 150ms ease,
+    opacity 250ms ease 150ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  .nav-progress {
+    animation: knav-pulse 1.2s ease-in-out infinite;
+    transform: scaleX(1);
+  }
+}

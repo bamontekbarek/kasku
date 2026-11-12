@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslations } from "next-intl";
-import { useRouter } from "next/navigation";
+import { useAppRouter } from "@/components/NavProgress";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { saveExpense } from "@/app/actions/expenses";
@@ -19,9 +19,11 @@ import { usePickPhoto } from "@/lib/scan/usePickPhoto";
 export function AddExpenseForm({ categories, today, quotaLeft, quotaTotal }: { categories: Category[]; today: string; quotaLeft: number; quotaTotal: number }) {
   const t = useTranslations("expense");
   const tc = useTranslations("common");
-  const router = useRouter();
+  const router = useAppRouter();
   const pick = usePickPhoto();
   const [failure, setFailure] = useState<string | null>(null);
+  // Saved and on the way to the Dashboard: keep the button locked until the page changes.
+  const [leaving, setLeaving] = useState(false);
   const firstCategory = categories.find((c) => !c.isSystem) ?? categories[0];
 
   const {
@@ -50,6 +52,7 @@ export function AddExpenseForm({ categories, today, quotaLeft, quotaTotal }: { c
       setFailure(tc("genericError"));
       return;
     }
+    setLeaving(true);
     router.push("/dashboard");
   });
 
@@ -58,8 +61,8 @@ export function AddExpenseForm({ categories, today, quotaLeft, quotaTotal }: { c
       header={<TopBar title={t("addTitle")} back="/dashboard" />}
       footer={
         <Footer>
-          <Button type="submit" form="add-expense" disabled={isSubmitting}>
-            {isSubmitting ? tc("saving") : t("save")}
+          <Button type="submit" form="add-expense" loading={isSubmitting || leaving}>
+            {isSubmitting || leaving ? tc("saving") : t("save")}
           </Button>
         </Footer>
       }
