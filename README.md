@@ -12,8 +12,9 @@ Next.js 15 (App Router) + TypeScript, Tailwind CSS v4, next-intl, React Hook For
 | M0 Fondasi | Supabase (`supabase/`), migrasi, lint/typecheck/test, CI + deploy otomatis | selesai |
 | M1 Akun | Register, login, verifikasi email, lupa/buat/ubah kata sandi, logout, ID/EN, legal, PWA | selesai |
 | M2 Pencatatan inti | Kategori, input manual, Riwayat (cari, filter, bulan, edit, hapus), Dashboard | selesai |
-| M3 Scan struk AI | Kamera/galeri, cek kualitas + crop + kompres di browser, upload, API scan DeepSeek, kuota, Periksa Hasil Scan | selesai di kode, butuh `DEEPSEEK_API_KEY` + `SUPABASE_SERVICE_ROLE_KEY` |
-| M4 | Anggaran, notifikasi, export: layar masih memakai data contoh (`src/lib/data.ts`) | belum |
+| M3 Scan struk AI | Kamera/galeri, cek kualitas + crop + kompres di browser, upload, API scan DeepSeek, kuota, Periksa Hasil Scan | selesai |
+| M4 Anggaran, notifikasi, export | Atur/pantau anggaran (salin otomatis tiap bulan), notifikasi dalam aplikasi + jadwal pg_cron (pengingat, ringkasan mingguan/bulanan, peringatan anggaran), export CSV | selesai |
+| Berikutnya | Hapus akun (ACC-06, layar masih data contoh di `src/lib/data.ts`), SMTP sendiri, push ke HP (fase 2) | belum |
 
 ## Setup (Supabase cloud, tanpa Docker)
 
@@ -62,7 +63,8 @@ src/
     (app)/             dashboard, riwayat, tambah, scan, anggaran, akun …
     auth/confirm/      target link email (verifikasi + reset), verifyOtp(token_hash)
     api/receipts/      upload foto struk + [id]/scan (kuota, DeepSeek, simpan hasil mentah)
-    actions/           server action: bahasa, transaksi, kategori (RLS sebagai user yang login)
+    api/export/        export CSV (HIS-04)
+    actions/           server action: bahasa, transaksi, kategori, anggaran, notifikasi (RLS sebagai user yang login)
     offline/           halaman cadangan service worker
     pwa-icon/[size]/   ikon PNG untuk manifest
   components/          ui, form (TextField, PasswordField, …), PasswordRules, …
@@ -74,6 +76,9 @@ src/
     ai/                scanReceipt.ts (satu-satunya pemanggil DeepSeek), receipt.ts (skema + label Cek lagi)
     image/             cek kualitas, deteksi kertas, crop, resize, grayscale, kompres (tanpa library)
     scan/              kuota/env, client API scan, store foto antar layar
+    budget/            status anggaran (RPC get_budget_status), level Aman/Hampir habis/Lewat batas
+    notifications/     query, render teks notifikasi dari type + params (ikut bahasa user)
+    export/            format CSV (BOM, anti formula), query export berhalaman
     validation/        skema Zod akun
   middleware.ts
 public/sw.js           service worker kecil tanpa library

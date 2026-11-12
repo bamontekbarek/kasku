@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { TabScreen } from "@/components/BottomNav";
 import { Icon } from "@/components/Icon";
-import { Avatar, ButtonLink, Dot, ScanBadge } from "@/components/ui";
+import { Avatar, ButtonLink, Dot, ProgressBar, ScanBadge } from "@/components/ui";
+import type { BudgetLevel } from "@/lib/budget/status";
 import { NEUTRAL_COLOR, PERIODS, type Period } from "@/lib/expenses/constants";
 import { formatPct, shortAmount } from "@/lib/expenses/summary";
 import { cx, rp } from "@/lib/format";
@@ -21,6 +22,10 @@ export type PeriodView = {
 };
 
 export type DashboardData = {
+  /** DASH-10 */
+  unread: number;
+  /** DASH-06: this month's budget, null when none is set. */
+  budget: { total: number; used: number; pct: number; level: BudgetLevel } | null;
   periods: Record<Period, PeriodView>;
   /** "November 2026" */
   month: string;
@@ -36,6 +41,9 @@ function greetingKey(hour: number) {
 }
 
 const HIDDEN_KEY = "kasku:hide-amounts";
+
+const budgetBar: Record<BudgetLevel, string> = { safe: "var(--color-success)", near: "var(--color-accent)", over: "var(--color-danger)" };
+const budgetText: Record<BudgetLevel, string> = { safe: "text-success", near: "text-accent", over: "text-danger" };
 
 export function Dashboard({ offline, user, data }: { offline: boolean; user: { name: string; initials: string }; data: DashboardData }) {
   const t = useTranslations("dashboard");
@@ -85,8 +93,13 @@ export function Dashboard({ offline, user, data }: { offline: boolean; user: { n
           <Link href="/transactions" aria-label={t("search")} className="flex size-11 items-center justify-center text-fg hover:text-fg">
             <Icon name="search" size={22} />
           </Link>
-          <Link href="/notifications" aria-label={t("notifications")} className="flex size-11 items-center justify-center text-fg hover:text-fg">
+          <Link
+            href="/notifications"
+            aria-label={data.unread > 0 ? t("notificationsUnread", { count: data.unread }) : t("notifications")}
+            className="relative flex size-11 items-center justify-center text-fg hover:text-fg"
+          >
             <Icon name="bell" size={22} />
+            {data.unread > 0 && <span className="absolute top-2.5 right-2.5 size-2 rounded-full bg-accent ring-2 ring-bg" aria-hidden="true" />}
           </Link>
         </div>
       </header>
@@ -185,18 +198,43 @@ export function Dashboard({ offline, user, data }: { offline: boolean; user: { n
           </div>
         </div>
 
-        {/* DASH-06: real budget numbers arrive with M4 (budgets table). */}
-        <Link href="/budget/edit" className="flex items-center gap-3 rounded-xl bg-surface p-3.5 text-fg no-underline hover:text-fg">
-          <Icon name="wallet" size={20} className="flex-none text-fg-2" />
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">{t("budgetTitle")}</span>
-            <span className="mt-0.5 block text-xs leading-[17px] text-muted">{t("budgetEmpty")}</span>
-          </span>
-          <span className="flex items-center gap-1 text-[13px] font-semibold text-accent">
-            {t("budgetCta")}
-            <Icon name="chevronRight" size={16} strokeWidth={2} className="text-muted" />
-          </span>
-        </Link>
+        {data.budget ? (
+          <Link href="/budget" className="flex flex-col gap-2.5 rounded-xl bg-surface p-3.5 text-fg no-underline hover:text-fg">
+            <span className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <Icon name="wallet" size={18} className="text-fg-2" />
+                {t("budgetTitle")}
+              </span>
+              <span className={cx("text-[13px] font-semibold tabular-nums", budgetText[data.budget.level])}>
+                {t("budgetUsed", { pct: data.budget.pct })}
+              </span>
+            </span>
+            <ProgressBar pct={data.budget.pct} color={budgetBar[data.budget.level]} />
+            <span className="flex items-center justify-between text-xs text-muted tabular-nums">
+              <span>
+                {data.budget.used <= data.budget.total
+                  ? t("budgetLeft", { amount: money(data.budget.total - data.budget.used) })
+                  : t("budgetOver", { amount: money(data.budget.used - data.budget.total) })}
+              </span>
+              <span className="flex items-center gap-0.5">
+                {t("budgetOf", { amount: money(data.budget.total) })}
+                <Icon name="chevronRight" size={14} strokeWidth={2} />
+              </span>
+            </span>
+          </Link>
+        ) : (
+          <Link href="/budget/edit" className="flex items-center gap-3 rounded-xl bg-surface p-3.5 text-fg no-underline hover:text-fg">
+            <Icon name="wallet" size={20} className="flex-none text-fg-2" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-semibold">{t("budgetTitle")}</span>
+              <span className="mt-0.5 block text-xs leading-[17px] text-muted">{t("budgetEmpty")}</span>
+            </span>
+            <span className="flex items-center gap-1 text-[13px] font-semibold text-accent">
+              {t("budgetCta")}
+              <Icon name="chevronRight" size={16} strokeWidth={2} className="text-muted" />
+            </span>
+          </Link>
+        )}
 
         <div className="grid grid-cols-2 gap-2.5">
           <ButtonLink href="/scan" size="md">

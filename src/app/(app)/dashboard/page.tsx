@@ -3,6 +3,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { getAccount } from "@/lib/auth/account";
 import { PERIODS, type Period } from "@/lib/expenses/constants";
 import { localParts, todayIn } from "@/lib/expenses/dates";
+import { getBudgetStatus } from "@/lib/budget/queries";
+import { budgetLevel, usedPct } from "@/lib/budget/status";
+import { getUnreadCount } from "@/lib/notifications/queries";
 import { getCategories, getCategoryTotals, getPeriodSummaries, getRecentExpenses, hasExpenses } from "@/lib/expenses/queries";
 import { deltaPct, monthName, monthTitle, seriesLabel, shortDate, type PeriodSummary } from "@/lib/expenses/summary";
 import { Welcome } from "../welcome/Welcome";
@@ -17,13 +20,15 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const [{ offline }, account, any] = await Promise.all([searchParams, getAccount(), hasExpenses()]);
   if (!any) return <Welcome />;
 
-  const [summaries, totals, recent, categories, locale, t] = await Promise.all([
+  const [summaries, totals, recent, categories, locale, t, budget, unread] = await Promise.all([
     getPeriodSummaries(),
     getCategoryTotals(),
     getRecentExpenses(4),
     getCategories(),
     getLocale(),
     getTranslations("dashboard"),
+    getBudgetStatus(),
+    getUnreadCount(),
   ]);
 
   const view = (period: Period, s: PeriodSummary): PeriodView => {
@@ -46,6 +51,16 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
   const byId = new Map(categories.map((c) => [c.id, c]));
 
   const data: DashboardData = {
+    unread,
+    budget:
+      budget.total === null
+        ? null
+        : {
+            total: budget.total,
+            used: budget.used,
+            pct: usedPct(budget.used, budget.total),
+            level: budgetLevel(budget.used, budget.total, budget.threshold),
+          },
     periods: Object.fromEntries(PERIODS.map((p) => [p, view(p, summaries[p])])) as Record<Period, PeriodView>,
     month: monthTitle(today.slice(0, 7), locale),
     top: totals

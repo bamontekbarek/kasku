@@ -7,7 +7,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("meta"))("history") };
 }
 
-export default async function TransactionsPage({ searchParams }: { searchParams: Promise<{ month?: string }> }) {
-  const { month } = await searchParams;
-  return <Transactions {...await loadHistory(month)} />;
+export default async function TransactionsPage({ searchParams }: { searchParams: Promise<{ month?: string; category?: string }> }) {
+  const { month, category } = await searchParams;
+  return <Transactions {...await loadHistory(month, category)} />;
 }

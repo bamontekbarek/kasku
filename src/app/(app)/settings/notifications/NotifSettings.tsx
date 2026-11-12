@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
+import { useRef, useState, type ReactNode } from "react";
+import { updateNotificationSettings } from "@/app/actions/notifications";
 import { Icon } from "@/components/Icon";
-import { Badge, Button, Screen, SectionLabel, Segmented, Switch, TopBar } from "@/components/ui";
+import { Badge, Notice, Screen, SectionLabel, Segmented, Switch, TopBar } from "@/components/ui";
+import type { NotificationSettings } from "@/lib/notifications/queries";
 
 function ToggleRow({ title, sub, on, onToggle, last, children }: { title: string; sub: string; on?: boolean; onToggle?: () => void; last?: boolean; children?: ReactNode }) {
   return (
@@ -25,86 +28,110 @@ function Group({ id, label, children }: { id: string; label: string; children: R
   );
 }
 
-export function NotifSettings() {
-  const [push, setPush] = useState(false);
-  const [s, set] = useState({ near: true, over: true, daily: true, weekly: true, monthly: true });
-  const [threshold, setThreshold] = useState<"70" | "80" | "90">("80");
-  const toggle = (k: keyof typeof s) => () => set({ ...s, [k]: !s[k] });
+type Toggle = "budgetNear" | "budgetOver" | "dailyReminder" | "weeklySummary" | "monthlyReport";
 
-  useEffect(() => {
-    if (typeof Notification !== "undefined" && Notification.permission === "granted") setPush(true);
-  }, []);
+/** Each change saves right away; on failure the switch flips back and an error shows. */
+export function NotifSettings({ initial }: { initial: NotificationSettings }) {
+  const t = useTranslations("notifSettings");
+  const tc = useTranslations("common");
+  const [s, setS] = useState(initial);
+  const [error, setError] = useState(false);
+  const timeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const enablePush = async () => {
-    // TODO: subscribe the service worker to Web Push and store the subscription
-    if (typeof Notification === "undefined") return setPush(true);
-    const result = await Notification.requestPermission();
-    if (result === "granted") setPush(true);
+  const save = async (patch: Partial<NotificationSettings>, prev: NotificationSettings) => {
+    setError(false);
+    const res = await updateNotificationSettings(patch);
+    if (!res.ok) {
+      setS(prev);
+      setError(true);
+    }
+  };
+
+  const change = (patch: Partial<NotificationSettings>) => {
+    const prev = s;
+    setS({ ...s, ...patch });
+    void save(patch, prev);
+  };
+
+  const toggle = (k: Toggle) => () => change({ [k]: !s[k] });
+
+  const changeTime = (value: string) => {
+    if (!/^\d{2}:\d{2}$/.test(value)) return;
+    const prev = s;
+    setS({ ...s, reminderTime: value });
+    if (timeTimer.current) clearTimeout(timeTimer.current);
+    timeTimer.current = setTimeout(() => void save({ reminderTime: value }, prev), 600);
   };
 
   return (
-    <Screen header={<TopBar title="Pengaturan Notifikasi" back="/notifications" />}>
+    <Screen header={<TopBar title={t("title")} back="/notifications" />}>
       <div className="flex flex-col gap-5 px-4 pt-3 pb-8">
-        {push ? (
-          <div role="status" className="flex items-center gap-2.5 rounded-xl bg-success-soft px-3.5 py-3 text-sm font-medium text-success">
-            <Icon name="check" size={18} strokeWidth={2.4} />
-            Notifikasi ke HP aktif di perangkat ini
-          </div>
-        ) : (
-          <section className="flex flex-col gap-3 rounded-[14px] border border-accent-line bg-surface p-4">
-            <div className="flex items-start gap-3">
-              <span className="flex size-10 flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent">
-                <Icon name="bell" />
-              </span>
-              <div>
-                <h2 className="m-0 text-[15px] font-semibold">Notifikasi ke HP belum aktif</h2>
-                <p className="mt-1 mb-0 text-[13px] leading-[19px] text-fg-2">Notifikasi tetap tampil di dalam aplikasi. Aktifkan agar juga muncul di layar HP.</p>
-              </div>
+        <section className="flex flex-col gap-2 rounded-[14px] border border-raised bg-surface p-4">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 flex-none items-center justify-center rounded-[10px] bg-accent-soft text-accent">
+              <Icon name="bell" />
+            </span>
+            <div>
+              <h2 className="m-0 flex items-center gap-2 text-[15px] font-semibold">
+                {t("pushTitle")} <Badge tone="neutral" size="xs">{t("soon")}</Badge>
+              </h2>
+              <p className="mt-1 mb-0 text-[13px] leading-[19px] text-fg-2">{t("pushBody")}</p>
             </div>
-            <Button size="sm" className="h-11" onClick={enablePush}>
-              Aktifkan notifikasi
-            </Button>
-            <p className="m-0 text-xs leading-[17px] text-muted">Di iPhone: pasang Kasku ke layar utama dulu lewat menu Bagikan › Tambah ke Layar Utama.</p>
-          </section>
+          </div>
+          <p className="m-0 text-xs leading-[17px] text-muted">{t("pushIos")}</p>
+        </section>
+
+        {error && (
+          <Notice tone="danger" icon="alertTriangle" role="alert">
+            {tc("genericError")}
+          </Notice>
         )}
 
-        <Group id="ns-budget" label="ANGGARAN">
-          <ToggleRow title="Hampir habis" sub="Saat pemakaian kategori mencapai batas di bawah" on={s.near} onToggle={toggle("near")} />
-          {s.near && (
+        <Group id="ns-budget" label={t("budget")}>
+          <ToggleRow title={t("near")} sub={t("nearSub")} on={s.budgetNear} onToggle={toggle("budgetNear")} />
+          {s.budgetNear && (
             <div className="flex min-h-14 items-center justify-between border-b border-surface">
-              <span className="text-sm text-fg-2">Ingatkan di</span>
+              <span className="text-sm text-fg-2">{t("remindAt")}</span>
               <Segmented
-                label="Batas peringatan"
+                label={t("threshold")}
                 className="!p-[3px] rounded-lg bg-surface"
                 itemClass="h-8 rounded-md px-3 text-[13px]"
                 activeClass="bg-raised text-accent font-semibold"
-                options={["70", "80", "90"].map((v) => ({ value: v as "70" | "80" | "90", label: `${v}%` }))}
-                value={threshold}
-                onChange={setThreshold}
+                options={(["70", "80", "90"] as const).map((v) => ({ value: v, label: `${v}%` }))}
+                value={String(s.budgetThreshold) as "70" | "80" | "90"}
+                onChange={(v) => change({ budgetThreshold: Number(v) as 70 | 80 | 90 })}
               />
             </div>
           )}
-          <ToggleRow title="Lewat batas" sub="Saat pengeluaran melebihi anggaran" on={s.over} onToggle={toggle("over")} last />
+          <ToggleRow title={t("over")} sub={t("overSub")} on={s.budgetOver} onToggle={toggle("budgetOver")} last />
         </Group>
 
-        <Group id="ns-remind" label="PENGINGAT">
-          <ToggleRow title="Pengingat harian" sub="Hanya dikirim jika belum ada catatan hari itu" on={s.daily} onToggle={toggle("daily")} last={!s.daily} />
-          {s.daily && (
+        <Group id="ns-remind" label={t("reminders")}>
+          <ToggleRow title={t("daily")} sub={t("dailySub")} on={s.dailyReminder} onToggle={toggle("dailyReminder")} last={!s.dailyReminder} />
+          {s.dailyReminder && (
             <div className="flex min-h-14 items-center justify-between">
-              <label htmlFor="ns-time" className="text-sm text-fg-2">Jam pengingat</label>
-              <input id="ns-time" type="time" defaultValue="20:00" className="h-9 rounded-lg border border-raised bg-surface px-2.5 text-[15px] text-fg outline-none focus:border-accent" />
+              <label htmlFor="ns-time" className="text-sm text-fg-2">
+                {t("time")}
+              </label>
+              <input
+                id="ns-time"
+                type="time"
+                value={s.reminderTime}
+                onChange={(e) => changeTime(e.target.value)}
+                className="h-11 rounded-lg border border-raised bg-surface px-2.5 text-[15px] text-fg outline-none focus:border-accent"
+              />
             </div>
           )}
         </Group>
 
-        <Group id="ns-summary" label="RINGKASAN">
-          <ToggleRow title="Ringkasan mingguan" sub="Setiap Senin pukul 08.00" on={s.weekly} onToggle={toggle("weekly")} />
-          <ToggleRow title="Laporan bulanan" sub="Setiap tanggal 1 pukul 08.00" on={s.monthly} onToggle={toggle("monthly")} last />
+        <Group id="ns-summary" label={t("summaries")}>
+          <ToggleRow title={t("weekly")} sub={t("weeklySub")} on={s.weeklySummary} onToggle={toggle("weeklySummary")} />
+          <ToggleRow title={t("monthly")} sub={t("monthlySub")} on={s.monthlyReport} onToggle={toggle("monthlyReport")} last />
         </Group>
 
-        <Group id="ns-acc" label="AKUN & KEAMANAN">
-          <ToggleRow title="Perubahan kata sandi & login baru" sub="Demi keamanan, selalu dikirim" last>
-            <Badge tone="neutral">Selalu aktif</Badge>
+        <Group id="ns-acc" label={t("account")}>
+          <ToggleRow title={t("security")} sub={t("securitySub")} last>
+            <Badge tone="neutral">{t("alwaysOn")}</Badge>
           </ToggleRow>
         </Group>
       </div>

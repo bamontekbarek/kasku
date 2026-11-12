@@ -17,6 +17,10 @@ export type HistoryRow = ExpenseRow & { date: string; time: string };
 export type HistoryProps = {
   /** "YYYY-MM" */
   month: string;
+  /** "YYYY-MM" in the user's time zone */
+  thisMonth: string;
+  /** "all" or a category id */
+  filter: string;
   months: Array<{ value: string; label: string }>;
   today: string;
   yesterday: string;
@@ -29,12 +33,12 @@ export type HistoryProps = {
  * and the category filter run in the browser over the loaded month, so they stay instant on a weak signal.
  * `overlay` renders a sheet on top (Export).
  */
-export function Transactions({ month, months, today, yesterday, categories, rows, overlay }: HistoryProps & { overlay?: ReactNode }) {
+export function Transactions({ month, filter: initialFilter, months, today, yesterday, categories, rows, overlay }: HistoryProps & { overlay?: ReactNode }) {
   const t = useTranslations("history");
   const tp = useTranslations("payment");
   const locale = useLocale();
   const router = useRouter();
-  const [filter, setFilter] = useState<string>("all");
+  const [filter, setFilter] = useState<string>(initialFilter);
   const [query, setQuery] = useState("");
   const q = query.trim().toLocaleLowerCase();
 
@@ -76,7 +80,7 @@ export function Transactions({ month, months, today, yesterday, categories, rows
     <TabScreen active="history">
       <TabHeader title={t("title")}>
         <div className="flex items-center gap-2">
-          <Link href={`/transactions/export?month=${month}`} className={pillClass}>
+          <Link href={`/transactions/export?month=${month}${filter !== "all" ? `&category=${filter}` : ""}`} className={pillClass}>
             <Icon name="download" size={16} strokeWidth={2} className="text-accent" />
             {t("export")}
           </Link>
@@ -87,7 +91,7 @@ export function Transactions({ month, months, today, yesterday, categories, rows
             <select
               aria-label={t("month")}
               value={month}
-              onChange={(e) => router.push(`/transactions?month=${e.target.value}`)}
+              onChange={(e) => router.push(`/transactions?month=${e.target.value}${filter !== "all" ? `&category=${filter}` : ""}`)}
               className="absolute inset-0 cursor-pointer opacity-0"
             >
               {months.map((m) => (

@@ -39,6 +39,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      budgets: {
+        Row: {
+          amount: number
+          category_id: string | null
+          created_at: string
+          id: string
+          month: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          month: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount?: number
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          month?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budgets_category_id_user_id_fkey"
+            columns: ["category_id", "user_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id", "user_id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string
@@ -203,6 +241,39 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          id: string
+          link: string
+          params: Json
+          read_at: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          id?: string
+          link?: string
+          params?: Json
+          read_at?: string | null
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          id?: string
+          link?: string
+          params?: Json
+          read_at?: string | null
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -352,9 +423,15 @@ export type Database = {
           tx_count: number
         }[]
       }
+      get_budget_status: { Args: { p_month?: string }; Returns: Json }
       get_period_summary: {
         Args: { p_anchor?: string; p_period: string }
         Returns: Json
+      }
+      mark_notifications_read: { Args: { p_ids?: string[] | null }; Returns: undefined }
+      save_budget: {
+        Args: { p_categories: Json; p_month: string; p_remind?: boolean | null; p_total: number }
+        Returns: undefined
       }
       save_expense: {
         Args: {
@@ -374,6 +451,7 @@ export type Database = {
     }
     Enums: {
       expense_source: "manual" | "scan"
+      notification_type: "budget_near" | "budget_over" | "daily_reminder" | "weekly_summary" | "monthly_report" | "security"
       payment_method: "cash" | "debit" | "qris" | "credit_card" | "ewallet"
       receipt_status: "uploaded" | "processing" | "done" | "failed"
     }
@@ -507,6 +585,7 @@ export const Constants = {
   public: {
     Enums: {
       expense_source: ["manual", "scan"],
+      notification_type: ["budget_near", "budget_over", "daily_reminder", "weekly_summary", "monthly_report", "security"],
       payment_method: ["cash", "debit", "qris", "credit_card", "ewallet"],
       receipt_status: ["uploaded", "processing", "done", "failed"],
     },

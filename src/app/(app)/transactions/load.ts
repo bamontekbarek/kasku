@@ -6,8 +6,8 @@ import { getCategories, getMonthExpenses } from "@/lib/expenses/queries";
 import { monthTitle } from "@/lib/expenses/summary";
 import type { HistoryProps } from "./Transactions";
 
-/** HIS-01 – HIS-03: one month of transactions (`?month=YYYY-MM`, default this month) for the History list. */
-export async function loadHistory(monthParam: string | undefined): Promise<HistoryProps> {
+/** HIS-01 – HIS-03: one month of transactions (`?month=YYYY-MM`, default this month; `?category=` preselects a filter). */
+export async function loadHistory(monthParam: string | undefined, categoryParam?: string): Promise<HistoryProps> {
   const [account, locale] = await Promise.all([getAccount(), getLocale()]);
   const today = todayIn(account.timeZone);
   const thisMonth = today.slice(0, 7);
@@ -19,6 +19,8 @@ export async function loadHistory(monthParam: string | undefined): Promise<Histo
 
   return {
     month,
+    thisMonth,
+    filter: categories.some((c) => c.id === categoryParam) ? categoryParam! : "all",
     months: recentMonths(thisMonth, 24).map((m) => ({ value: m, label: monthTitle(m, locale) })),
     today,
     yesterday,
