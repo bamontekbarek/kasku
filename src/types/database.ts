@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       budgets: {
         Row: {
+          alert_level: number
           amount: number
           category_id: string | null
           created_at: string
@@ -50,6 +51,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alert_level?: number
           amount: number
           category_id?: string | null
           created_at?: string
@@ -59,6 +61,7 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          alert_level?: number
           amount?: number
           category_id?: string | null
           created_at?: string
